@@ -2,8 +2,9 @@
 Allows you to import keyboard layouts into blender and have them render in 3d
 ####To-Do
 * Add support for ISO enter
-
 * Add key labels
+* Add more key profiles (DSA is done except for big ass enter keys)
+
 
 ##How to install Addon:
 1. Download zip
