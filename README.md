@@ -1,5 +1,9 @@
 # Keyboard-Layout-Editor-for-Blender
 Allows you to import keyboard layouts into blender and have them render in 3d
+####To-Do
+* Add support for ISO enter
+
+* Add key labels
 
 ##How to install Addon:
 1. Download zip
