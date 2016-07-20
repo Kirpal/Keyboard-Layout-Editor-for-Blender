@@ -2,7 +2,7 @@
 bl_info = {
     "name": "Import: KLE Raw JSON format (.json)",
     "author": "/u/kdem007",
-    "version": (0, 2),
+    "version": (1, 1),
     "blender": (2, 57, 0),
     "location": "File > Import-Export > Keyboard Layout Editor Raw(.json) ",
     "description": "Import Keyboard Layouts",
