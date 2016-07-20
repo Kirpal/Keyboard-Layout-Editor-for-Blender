@@ -7,7 +7,7 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 
 
 ##How to install Addon:
-1. Download zip
+1. Download [Zip File](https://github.com/lucadem1313/Keyboard-Layout-Editor-for-Blender/raw/master/keyboard_generator.zip)
 2. Open Blender
 3. Go to File>User Preferences (Ctrl + Alt + U)
 4. Click “Install from File...” at the bottom of the panel
