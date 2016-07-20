@@ -12,7 +12,7 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 3. Go to File>User Preferences (Ctrl + Alt + U)
 4. Click “Install from File...” at the bottom of the panel
 5. Select the zip archive that you downloaded and click “Install from File…” at the top right
-6. Check the checkbox next to “Import-Export: Import: KLE Raw JSON format (.json)”
+6. Check the checkbox next to “Import-Export: Import: KLE Raw JSON format (.json)” to enable plugin
 7. Click “Save User Settings” and close the preferences window
 8. Now the addon is ready to use
 
