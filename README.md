@@ -1,9 +1,9 @@
 # Keyboard-Layout-Editor-for-Blender
 Allows you to import keyboard layouts into blender and have them render in 3d
 ####To-Do
-* ~~Add support for ISO enter~~
-* Add key labels
-* Add more key profiles (DSA and DCS are done)
+- [x] Add support for ISO enter
+- [ ] Add key labels
+- [ ] Add more key profiles (DSA and DCS are done)
 
 
 ##How to install Addon:
@@ -25,11 +25,10 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 
 ##Examples:
 
-|Render|Layout|
-|---------|---------|
-|[Imgur](http://i.imgur.com/oouyHOU.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/92d9daa6db42bb8f39dadec3ef0e299b)|
-|[Imgur](http://i.imgur.com/y5Uzhqd.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/49b89881ec3ff9e048d0ad05d83e1b46)|
-|[Imgur](http://i.imgur.com/sUVdJex.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/6861d5d0070a788ad4f9d57f0c0fb9af)|
-|[Imgur](http://i.imgur.com/GiPgGKe.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/10fab2ecc41b32e92e7331c54f943d73)|
-|[Imgur](http://i.imgur.com/8lL7dAR.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/38f7920dbbbc144d1a87692f18edc8d8)|
-|[Imgur](http://i.imgur.com/7KKlx9L.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/53767e112a7bb65e3b7df17c4301030f)|
+
+[<img alt="Layout 1" title="Layout 1" src="oouyHOU.png" height="200">](http://www.keyboard-layout-editor.com/#/gists/92d9daa6db42bb8f39dadec3ef0e299b)
+[<img alt="Layout 2" title="Layout 2" src="y5Uzhqd.png" height="200">](http://www.keyboard-layout-editor.com/#/gists/49b89881ec3ff9e048d0ad05d83e1b46)
+[<img alt="Layout 3" title="Layout 3" src="sUVdJex.png" height="200">](http://www.keyboard-layout-editor.com/#/gists/6861d5d0070a788ad4f9d57f0c0fb9af)
+[<img alt="Layout 4" title="Layout 4" src="GiPgGKe.png" height="200">](http://www.keyboard-layout-editor.com/#/gists/10fab2ecc41b32e92e7331c54f943d73)
+[<img alt="Layout 5" title="Layout 5" src="8lL7dAR.png" height="200">](http://www.keyboard-layout-editor.com/#/gists/38f7920dbbbc144d1a87692f18edc8d8)
+[<img alt="Layout 6" title="Layout 6" src="7KKlx9L.png" height="200">](http://www.keyboard-layout-editor.com/#/gists/53767e112a7bb65e3b7df17c4301030f)
