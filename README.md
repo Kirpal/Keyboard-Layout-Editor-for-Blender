@@ -1,7 +1,7 @@
 # Keyboard-Layout-Editor-for-Blender
 Allows you to import keyboard layouts into blender and have them render in 3d
 ####To-Do
-* Add support for ISO enter
+* ~~Add support for ISO enter~~
 * Add key labels
 * Add more key profiles (DSA is done except for big ass enter keys)
 
@@ -33,4 +33,3 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 |[Imgur](http://i.imgur.com/GiPgGKe.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/10fab2ecc41b32e92e7331c54f943d73)|
 |[Imgur](http://i.imgur.com/8lL7dAR.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/38f7920dbbbc144d1a87692f18edc8d8)|
 |[Imgur](http://i.imgur.com/7KKlx9L.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/53767e112a7bb65e3b7df17c4301030f)|
-
