@@ -144,11 +144,11 @@ def getKey(filePath):
                                                 if "f2" in rowData:
                                                         key["f2"] = rowData["f2"]
                                                 if "p" in rowData:
-                                                        key["p"] = rowData["p"]
+                                                        key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
                                                 else:
                                                         key["p"] = "DCS"
 
-                                                if key["p"] == "":
+                                                if key["p"] == "" or key["p"] not in ["DSA", "DCS"]:
                                                         key["p"] = "DCS"
 
                                                 #set the text on the key
@@ -177,11 +177,11 @@ def getKey(filePath):
                                                 if "f2" in rowData:
                                                         key["f2"] = rowData["f2"]
                                                 if "p" in rowData:
-                                                        key["p"] = rowData["p"]
+                                                        key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
                                                 else:
                                                         key["p"] = "DCS"
 
-                                                if key["p"] == "":
+                                                if key["p"] == "" or key["p"] not in ["DSA", "DCS"]:
                                                         key["p"] = "DCS"
 
                                                 key["xCoord"] = 0
@@ -202,7 +202,8 @@ def getKey(filePath):
                         y += 1
                 else:
                         #if the current item is a dict then add the backcolor property to the keyboard
-                        keyboard["backcolor"] = row["backcolor"]
+                        if "backcolor" in row:
+                            keyboard["backcolor"] = row["backcolor"]
         return keyboard
 
 def read(filepath):
@@ -212,7 +213,7 @@ def read(filepath):
         #template objects that have to be appended in and then deleted at the end
         #defaultObjects = ["DCSL", "DCSMH", "DCSR", "DCST", "DCSMV", "DCSB", "DCSETL", "DCSETM", "DCSETR", "DCSEBL", "DCSEBM", "DCSEBR", "DSAL", "DSAMH", "DSAR", "DSAT", "DSAMV", "DSAB", "DSAETL", "DSAETM", "DSAETR", "DSAEBL", "DSAEBM", "DSAEBR", "side"]
 
-        defaultObjects = ["DCSTL", "DCSTM", "DCSTR", "DCSML", "DCSMM", "DCSMR", "DCSBL", "DCSBM", "DCSBR", "DCSTLF", "DCSTMF", "DCSTRF", "DCSMLF", "DCSMMF", "DCSMRF", "DCSBLF", "DCSBMF", "DCSBRF", "DCSTLS", "DCSTMS", "DCSTRS", "DCSMLS", "DCSMMS", "DCSMRS", "DCSBLS", "DCSBMS", "DCSBRS", "side"]
+        defaultObjects = ["DCSTL", "DCSTM", "DCSTR", "DCSML", "DCSMM", "DCSMR", "DCSBL", "DCSBM", "DCSBR", "DCSTLF", "DCSTMF", "DCSTRF", "DCSMLF", "DCSMMF", "DCSMRF", "DCSBLF", "DCSBMF", "DCSBRF", "DCSTLS", "DCSTMS", "DCSTRS", "DCSMLS", "DCSMMS", "DCSMRS", "DCSBLS", "DCSBMS", "DCSBRS", "DSATL", "DSATM", "DSATR", "DSAML", "DSAMM", "DSAMR", "DSABL", "DSABM", "DSABR", "DSATLF", "DSATMF", "DSATRF", "DSAMLF", "DSAMMF", "DSAMRF", "DSABLF", "DSABMF", "DSABRF", "DSATLS", "DSATMS", "DSATRS", "DSAMLS", "DSAMMS", "DSAMRS", "DSABLS", "DSABMS", "DSABRS", "side", "switch"]
         #blender file with template objects
         templateBlend = os.path.join(os.path.dirname(__file__), "template.blend", "Object")
 
@@ -278,18 +279,31 @@ def read(filepath):
                 BM = key["p"]+'BM'
                 BR = key["p"]+'BR'
 
-                #set default values if they aren't set
-                if "x2" not in key:
-                    key["x2"] = 0
-                if "y2" not in key:
-                    key["y2"] = 0
-                if "w2" not in key:
-                    key["w2"] = 1
-                if "h2" not in key:
-                    key["h2"] = 1
-
                 #if key is big ass enter or iso enter
                 if "x2" in key or "y2" in key or "w2" in key or "h2" in key:
+                    #set default values if they aren't set
+                    if "x2" not in key:
+                        key["x2"] = 0
+                    if "y2" not in key:
+                        key["y2"] = 0
+                    if "w2" not in key:
+                        key["w2"] = 1
+                    if "h2" not in key:
+                        key["h2"] = 1
+
+                    if key["p"] == "DSA":
+                        TL = key["p"]+'TLF'
+                        TM = key["p"]+'TMF'
+                        TR = key["p"]+'TRF'
+
+                        ML = key["p"]+'MLF'
+                        MM = key["p"]+'MMF'
+                        MR = key["p"]+'MRF'
+
+                        BL = key["p"]+'BLF'
+                        BM = key["p"]+'BMF'
+                        BR = key["p"]+'BRF'
+
                     #check if key is "stepped"
                     if "l" in key and key["l"] is True:
                         ETL = key["p"]+'TLS'
@@ -315,21 +329,6 @@ def read(filepath):
                         EBL = key["p"]+'BLF'
                         EBM = key["p"]+'BMF'
                         EBR = key["p"]+'BRF'
-
-                    #check if the outcropping sticks out of the sides
-                    if key["x2"] < 0:
-                        TL = key["p"]+'TLF'
-
-                        ML = key["p"]+'MLF'
-
-                        BL = key["p"]+'BLF'
-
-                    if key["x2"] + key["w2"] > key["w"]:
-                        TR = key["p"]+'TRF'
-
-                        MR = key["p"]+'MRF'
-
-                        BR = key["p"]+'BRF'
 
                     #set the outcropping x and y
                     key["x2"] = key["x"] + key["x2"]
@@ -434,6 +433,17 @@ def read(filepath):
                     new_obj_enter_br.select = True
                     bpy.context.scene.objects.active = new_obj_enter_tl
                     bpy.ops.object.join()
+
+                else:
+                    #set default values if they aren't set
+                    if "x2" not in key:
+                        key["x2"] = 0
+                    if "y2" not in key:
+                        key["y2"] = 0
+                    if "w2" not in key:
+                        key["w2"] = 1
+                    if "h2" not in key:
+                        key["h2"] = 1
 
 
                 #add all the key pieces
@@ -547,6 +557,14 @@ def read(filepath):
                 else:
                     new_obj_tl.name = key["v"].replace("\n", " ")
 
+                new_switch = bpy.data.objects["switch"].copy()
+                new_switch.data = bpy.data.objects["switch"].data.copy()
+                new_switch.animation_data_clear()
+                new_switch.location[0] = (key["x"])*-1 - (key["w"])/2
+                new_switch.location[1] = key["y"]+key["h"]/2
+                scn.objects.link(new_switch)
+                new_switch.name = "switch: %s-%s"%(key["row"], key["col"])
+
                 #set the keyboard width and height if it was smaller than the current width
                 if key["x"]+key["w"] > width:
                     width = key["x"]+key["w"]
@@ -603,23 +621,23 @@ def read(filepath):
 
         #set case pieces size and location and add them to the scene
         side1.location = (0.1, height/2, 0)
-        side1.dimensions = (0.2, (height+0.4), 0.6)
+        side1.dimensions = (0.2, (height+0.4), 1)
         scn.objects.link(side1)
 
         side2.location = (width/-2, -0.1, 0)
-        side2.dimensions = (width, 0.2, 0.6)
+        side2.dimensions = (width, 0.2, 1)
         scn.objects.link(side2)
 
         side3.location = ((width+0.1)*-1, height/2, 0)
-        side3.dimensions = (0.2, (height+0.4), 0.6)
+        side3.dimensions = (0.2, (height+0.4), 1)
         scn.objects.link(side3)
 
         side4.location = (width/-2, (height+0.1), 0)
-        side4.dimensions = (width, 0.2, 0.6)
+        side4.dimensions = (width, 0.2, 1)
         scn.objects.link(side4)
 
-        side5.location = (width/-2, height/2, -0.15)
-        side5.dimensions = (width, height, 0.3)
+        side5.location = (width/-2, height/2, -0.25)
+        side5.dimensions = (width, height, 0.5)
         scn.objects.link(side5)
 
         #deselect everything
