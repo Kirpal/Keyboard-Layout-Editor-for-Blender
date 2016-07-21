@@ -12,6 +12,7 @@ open.
 import bpy
 import json
 import os
+from math import pi
 
 #convert HEX color to RGB
 def hex2rgb(hex):
@@ -76,6 +77,7 @@ def getKey(filePath):
                 if type(row) != dict:
                         #get row data from previous row
                         rowData = rowData
+                        rowData["y"] = y
                         #iterate over keys in row
                         for pos, value in enumerate(row):
                                 #check if item is a key or dict of key properties
@@ -93,7 +95,8 @@ def getKey(filePath):
                                                 else:
                                                         key["xCoord"] = 0
                                                 if "y" in prev:
-                                                        key["yCoord"] = prev["y"]
+                                                        rowData["yCoord"] = prev["y"]
+                                                        rowData["y"] += prev["y"]
                                                         y += prev["y"]
                                                 if "w" in prev:
                                                         key["w"] = prev["w"]
@@ -129,6 +132,20 @@ def getKey(filePath):
                                                         rowData["f2"] = prev["f2"]
                                                 if "p" in prev:
                                                         rowData["p"] = prev["p"]
+                                                if "d" in prev:
+                                                        key["d"] = prev["d"]
+                                                else:
+                                                        key["d"] = False
+                                                if "r" in prev:
+                                                        rowData["r"] = prev["r"]
+                                                        rowData["rRow"] = 0
+                                                if "rx" in prev:
+                                                        rowData["rx"] = prev["rx"]
+                                                if "ry" in prev:
+                                                        rowData["ry2"] = prev["ry"]
+                                                        rowData["ry"] = prev["ry"]
+                                                elif "ry" in rowData and "r" in prev:
+                                                        rowData["ry2"] = rowData["ry"]
 
                                                 #if rowData has property set then add it to key
                                                 if "c" in rowData:
@@ -143,6 +160,18 @@ def getKey(filePath):
                                                         key["f"] = rowData["f"]
                                                 if "f2" in rowData:
                                                         key["f2"] = rowData["f2"]
+                                                if "r" in rowData:
+                                                        key["r"] = rowData["r"]
+                                                if "rx" in rowData:
+                                                        key["rx"] = rowData["rx"]
+                                                if "ry" in rowData:
+                                                        key["ry"] = rowData["ry"]
+                                                if "ry2" in rowData:
+                                                    if "yCoord" in rowData:
+                                                        key["ry2"] = rowData["ry2"] + rowData["yCoord"]
+                                                    else:
+                                                        key["ry2"] = rowData["ry2"]
+
                                                 if "p" in rowData:
                                                         key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
                                                 else:
@@ -158,7 +187,13 @@ def getKey(filePath):
                                                 key["col"] = pos
                                                 #set x and y coordinate of key
                                                 key["x"] = x
-                                                key["y"] = y
+                                                key["y"] = rowData["y"]
+
+                                                if "rx" in key:
+                                                    key["x"] += key["rx"]
+                                                if "ry2" in key:
+                                                    key["y"] = key["ry2"]
+
                                                 #add the key to the current row
                                                 keyboard["rows"][key["row"]].append(key)
                                         #if the previous item isn't a dict
@@ -176,6 +211,18 @@ def getKey(filePath):
                                                         key["f"] = rowData["f"]
                                                 if "f2" in rowData:
                                                         key["f2"] = rowData["f2"]
+                                                if "r" in rowData:
+                                                        key["r"] = rowData["r"]
+                                                if "rx" in rowData:
+                                                        key["rx"] = rowData["rx"]
+                                                if "ry" in rowData:
+                                                        key["ry"] = rowData["ry"]
+                                                if "ry2" in rowData:
+                                                    if "yCoord" in rowData:
+                                                        key["ry2"] = rowData["ry2"] + rowData["yCoord"]
+                                                    else:
+                                                        key["ry2"] = rowData["ry2"]
+
                                                 if "p" in rowData:
                                                         key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
                                                 else:
@@ -185,6 +232,7 @@ def getKey(filePath):
                                                         key["p"] = "DCS"
 
                                                 key["xCoord"] = 0
+                                                key["d"] = False
                                                 key["w"] = 1
                                                 key["h"] = 1
 
@@ -195,15 +243,25 @@ def getKey(filePath):
                                                 key["col"] = pos
                                                 #set x and y coordinates of key
                                                 key["x"] = x
-                                                key["y"] = y
+                                                key["y"] = rowData["y"]
+
+                                                if "rx" in key:
+                                                    key["x"] += key["rx"]
+                                                if "ry2" in key:
+                                                    key["y"] = key["ry2"]
+
                                                 #add the key to the current row
                                                 keyboard["rows"][key["row"]].append(key)
                                         x += key["w"]
                         y += 1
+                        if "ry2" in key:
+                            rowData["ry2"] += 1
                 else:
                         #if the current item is a dict then add the backcolor property to the keyboard
                         if "backcolor" in row:
                             keyboard["backcolor"] = row["backcolor"]
+                        if "switchType" in row:
+                            keyboard["switchType"] = row["switchType"]
         return keyboard
 
 def read(filepath):
@@ -233,343 +291,385 @@ def read(filepath):
         for row in keyboard["rows"]:
             #iterate over keys in row
             for key in row:
-                #new material for key
-                m = Material()
-                m.set_cycles()
-                m.make_material("%s-%s"%(key["row"], key["col"]))
+                if key["d"] is False:
+                    #new material for key
+                    m = Material()
+                    m.set_cycles()
+                    m.make_material("%s-%s"%(key["row"], key["col"]))
 
-                #make new diffuse node
-                diffuseBSDF = m.nodes['Diffuse BSDF']
+                    #make new diffuse node
+                    diffuseBSDF = m.nodes['Diffuse BSDF']
 
-                #if key color is set convert hex to rgb and set diffuse color to that value, otherwise set it to rgba(0.8, 0.8, 0.8, 1)/#cccccc
-                if "c" in key:
-                    c = key["c"]
-                    rgb = hex2rgb(key["c"])
-                    diffuseBSDF.inputs["Color"].default_value = [rgb[0]/256, rgb[1]/256, rgb[2]/256, 1]
-                else:
-                    diffuseBSDF.inputs["Color"].default_value = [0.8, 0.8, 0.8, 1]
-
-                #add material output node
-                materialOutput = m.nodes['Material Output']
-                #add glossy node
-                glossyBSDF = m.makeNode('ShaderNodeBsdfGlossy', 'Glossy BSDF')
-                #set glossy node color to white and roughness to 0.3
-                glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
-                glossyBSDF.inputs["Roughness"].default_value = 0.3
-                #add mix node
-                mixShader = m.makeNode('ShaderNodeMixShader', 'Mix Shader')
-                #set mix node factor to 0.8
-                mixShader.inputs['Fac'].default_value = 0.8
-                #connect glossy and diffuse nodes to the mix node, and connect that to the material output
-                m.link(glossyBSDF, 'BSDF', mixShader, 1)
-                m.link(diffuseBSDF, 'BSDF', mixShader, 2)
-                m.link(mixShader, 'Shader', materialOutput, 'Surface')
-
-                new_obj_enter_tl = None
-
-                TL = key["p"]+'TL'
-                TM = key["p"]+'TM'
-                TR = key["p"]+'TR'
-
-                ML = key["p"]+'ML'
-                MM = key["p"]+'MM'
-                MR = key["p"]+'MR'
-
-                BL = key["p"]+'BL'
-                BM = key["p"]+'BM'
-                BR = key["p"]+'BR'
-
-                #if key is big ass enter or iso enter
-                if "x2" in key or "y2" in key or "w2" in key or "h2" in key:
-                    #set default values if they aren't set
-                    if "x2" not in key:
-                        key["x2"] = 0
-                    if "y2" not in key:
-                        key["y2"] = 0
-                    if "w2" not in key:
-                        key["w2"] = 1
-                    if "h2" not in key:
-                        key["h2"] = 1
-
-                    if key["p"] == "DSA":
-                        TL = key["p"]+'TLF'
-                        TM = key["p"]+'TMF'
-                        TR = key["p"]+'TRF'
-
-                        ML = key["p"]+'MLF'
-                        MM = key["p"]+'MMF'
-                        MR = key["p"]+'MRF'
-
-                        BL = key["p"]+'BLF'
-                        BM = key["p"]+'BMF'
-                        BR = key["p"]+'BRF'
-
-                    #check if key is "stepped"
-                    if "l" in key and key["l"] is True:
-                        ETL = key["p"]+'TLS'
-                        ETM = key["p"]+'TMS'
-                        ETR = key["p"]+'TRS'
-
-                        EML = key["p"]+'MLS'
-                        EMM = key["p"]+'MMS'
-                        EMR = key["p"]+'MRS'
-
-                        EBL = key["p"]+'BLS'
-                        EBM = key["p"]+'BMS'
-                        EBR = key["p"]+'BRS'
+                    #if key color is set convert hex to rgb and set diffuse color to that value, otherwise set it to rgba(0.8, 0.8, 0.8, 1)/#cccccc
+                    if "c" in key:
+                        c = key["c"]
+                        rgb = hex2rgb(key["c"])
+                        diffuseBSDF.inputs["Color"].default_value = [rgb[0]/256, rgb[1]/256, rgb[2]/256, 1]
                     else:
-                        ETL = key["p"]+'TLF'
-                        ETM = key["p"]+'TMF'
-                        ETR = key["p"]+'TRF'
+                        diffuseBSDF.inputs["Color"].default_value = [0.8, 0.8, 0.8, 1]
 
-                        EML = key["p"]+'MLF'
-                        EMM = key["p"]+'MMF'
-                        EMR = key["p"]+'MRF'
+                    #add material output node
+                    materialOutput = m.nodes['Material Output']
+                    #add glossy node
+                    glossyBSDF = m.makeNode('ShaderNodeBsdfGlossy', 'Glossy BSDF')
+                    #set glossy node color to white and roughness to 0.3
+                    glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
+                    glossyBSDF.inputs["Roughness"].default_value = 0.3
+                    #add mix node
+                    mixShader = m.makeNode('ShaderNodeMixShader', 'Mix Shader')
+                    #set mix node factor to 0.8
+                    mixShader.inputs['Fac'].default_value = 0.8
+                    #connect glossy and diffuse nodes to the mix node, and connect that to the material output
+                    m.link(glossyBSDF, 'BSDF', mixShader, 1)
+                    m.link(diffuseBSDF, 'BSDF', mixShader, 2)
+                    m.link(mixShader, 'Shader', materialOutput, 'Surface')
 
-                        EBL = key["p"]+'BLF'
-                        EBM = key["p"]+'BMF'
-                        EBR = key["p"]+'BRF'
+                    new_obj_enter_mm = None
 
-                    #set the outcropping x and y
-                    key["x2"] = key["x"] + key["x2"]
-                    key["y2"] = key["y"] + key["y2"]
+                    TL = key["p"]+'TL'
+                    TM = key["p"]+'TM'
+                    TR = key["p"]+'TR'
 
-                    #add all the outcropping pieces
-                    new_obj_enter_tl = bpy.data.objects[ETL].copy()
-                    new_obj_enter_tl.data = bpy.data.objects[ETL].data.copy()
-                    new_obj_enter_tl.animation_data_clear()
-                    new_obj_enter_tl.location[0] = key["x2"]*-1 - 0.5
-                    new_obj_enter_tl.location[1] = key["y2"]+0.5
+                    ML = key["p"]+'ML'
+                    MM = key["p"]+'MM'
+                    MR = key["p"]+'MR'
 
-                    new_obj_enter_tm = bpy.data.objects[ETM].copy()
-                    new_obj_enter_tm.data = bpy.data.objects[ETM].data.copy()
-                    new_obj_enter_tm.animation_data_clear()
-                    new_obj_enter_tm.location[0] = (key["x2"]+key["w2"]/2)*-1
-                    new_obj_enter_tm.location[1] = key["y2"]+0.5
-                    new_obj_enter_tm.dimensions[0] = key["w2"]-1+0.2 if key["w2"]-1+0.2 > 0 else 0.2
+                    BL = key["p"]+'BL'
+                    BM = key["p"]+'BM'
+                    BR = key["p"]+'BR'
 
-                    new_obj_enter_tr = bpy.data.objects[ETR].copy()
-                    new_obj_enter_tr.data = bpy.data.objects[ETR].data.copy()
-                    new_obj_enter_tr.animation_data_clear()
-                    new_obj_enter_tr.location[0] = key["x2"]*-1 - 0.5 - (key["w2"]-1)
-                    new_obj_enter_tr.location[1] = key["y2"]+0.5
+                    #if key is big ass enter or iso enter
+                    if "x2" in key or "y2" in key or "w2" in key or "h2" in key:
+                        #set default values if they aren't set
+                        if "x2" not in key:
+                            key["x2"] = 0
+                        if "y2" not in key:
+                            key["y2"] = 0
+                        if "w2" not in key:
+                            key["w2"] = 1
+                        if "h2" not in key:
+                            key["h2"] = 1
 
-                    new_obj_enter_ml = bpy.data.objects[EML].copy()
-                    new_obj_enter_ml.data = bpy.data.objects[EML].data.copy()
-                    new_obj_enter_ml.animation_data_clear()
-                    new_obj_enter_ml.location[0] = key["x2"]*-1 - 0.5
-                    new_obj_enter_ml.location[1] = key["y2"] + 0.5 + (key["h2"]-1)/2
-                    new_obj_enter_ml.dimensions[1] = key["h2"] - 1 + 0.2
+                        if key["p"] == "DSA":
+                            TL = key["p"]+'TLF'
+                            TM = key["p"]+'TMF'
+                            TR = key["p"]+'TRF'
 
-                    new_obj_enter_mm = bpy.data.objects[EMM].copy()
-                    new_obj_enter_mm.data = bpy.data.objects[EMM].data.copy()
-                    new_obj_enter_mm.animation_data_clear()
-                    new_obj_enter_mm.location[0] = (key["x2"]+key["w2"]/2)*-1
-                    new_obj_enter_mm.location[1] = key["y2"]+0.5+(key["h2"]-1)/2
-                    new_obj_enter_mm.dimensions = (key["w2"]-1+0.2 if key["w2"]-1+0.2 > 0 else 0.2, key["h2"] - 1 + 0.2, new_obj_enter_mm.dimensions[2])
+                            ML = key["p"]+'MLF'
+                            MM = key["p"]+'MMF'
+                            MR = key["p"]+'MRF'
 
-                    new_obj_enter_mr = bpy.data.objects[EMR].copy()
-                    new_obj_enter_mr.data = bpy.data.objects[EMR].data.copy()
-                    new_obj_enter_mr.animation_data_clear()
-                    new_obj_enter_mr.location[0] = (key["x2"])*-1 - 0.5 - (key["w2"]-1)
-                    new_obj_enter_mr.location[1] = key["y2"]+0.5 + (key["h2"]-1)/2
-                    new_obj_enter_mr.dimensions[1] = key["h2"] - 1 + 0.2
+                            BL = key["p"]+'BLF'
+                            BM = key["p"]+'BMF'
+                            BR = key["p"]+'BRF'
 
-                    new_obj_enter_bl = bpy.data.objects[EBL].copy()
-                    new_obj_enter_bl.data = bpy.data.objects[EBL].data.copy()
-                    new_obj_enter_bl.animation_data_clear()
-                    new_obj_enter_bl.location[0] = (key["x2"])*-1 - 0.5
-                    new_obj_enter_bl.location[1] = key["y2"]+0.5+key["h2"] - 1
+                        #check if key is "stepped"
+                        if "l" in key and key["l"] is True:
+                            ETL = key["p"]+'TLS'
+                            ETM = key["p"]+'TMS'
+                            ETR = key["p"]+'TRS'
 
-                    new_obj_enter_bm = bpy.data.objects[EBM].copy()
-                    new_obj_enter_bm.data = bpy.data.objects[EBM].data.copy()
-                    new_obj_enter_bm.animation_data_clear()
-                    new_obj_enter_bm.location[0] = (key["x2"])*-1 - 0.5 - (key["w2"]-1)/2
-                    new_obj_enter_bm.location[1] = key["y2"]+0.5+key["h2"]-1
-                    new_obj_enter_bm.dimensions[0] = key["w2"]-1+0.2 if key["w2"]-1+0.2 > 0 else 0.2
+                            EML = key["p"]+'MLS'
+                            EMM = key["p"]+'MMS'
+                            EMR = key["p"]+'MRS'
 
-                    new_obj_enter_br = bpy.data.objects[EBR].copy()
-                    new_obj_enter_br.data = bpy.data.objects[EBR].data.copy()
-                    new_obj_enter_br.animation_data_clear()
-                    new_obj_enter_br.location[0] = (key["x2"])*-1 - 0.5 - (key["w2"]-1)
-                    new_obj_enter_br.location[1] = key["y2"]+0.5+key["h2"]-1
+                            EBL = key["p"]+'BLS'
+                            EBM = key["p"]+'BMS'
+                            EBR = key["p"]+'BRS'
+                        else:
+                            ETL = key["p"]+'TLF'
+                            ETM = key["p"]+'TMF'
+                            ETR = key["p"]+'TRF'
+
+                            EML = key["p"]+'MLF'
+                            EMM = key["p"]+'MMF'
+                            EMR = key["p"]+'MRF'
+
+                            EBL = key["p"]+'BLF'
+                            EBM = key["p"]+'BMF'
+                            EBR = key["p"]+'BRF'
+
+                        #set the outcropping x and y
+                        key["x2"] = key["x"] + key["x2"]
+                        key["y2"] = key["y"] + key["y2"]
+
+                        #add all the outcropping pieces
+                        new_obj_enter_tl = bpy.data.objects[ETL].copy()
+                        new_obj_enter_tl.data = bpy.data.objects[ETL].data.copy()
+                        new_obj_enter_tl.animation_data_clear()
+                        new_obj_enter_tl.location[0] = key["x2"]*-1 - 0.5
+                        new_obj_enter_tl.location[1] = key["y2"]+0.5
+
+                        new_obj_enter_tm = bpy.data.objects[ETM].copy()
+                        new_obj_enter_tm.data = bpy.data.objects[ETM].data.copy()
+                        new_obj_enter_tm.animation_data_clear()
+                        new_obj_enter_tm.location[0] = (key["x2"]+key["w2"]/2)*-1
+                        new_obj_enter_tm.location[1] = key["y2"]+0.5
+                        new_obj_enter_tm.dimensions[0] = key["w2"]-1+0.2 if key["w2"]-1+0.2 > 0 else 0.2
+
+                        new_obj_enter_tr = bpy.data.objects[ETR].copy()
+                        new_obj_enter_tr.data = bpy.data.objects[ETR].data.copy()
+                        new_obj_enter_tr.animation_data_clear()
+                        new_obj_enter_tr.location[0] = key["x2"]*-1 - 0.5 - (key["w2"]-1)
+                        new_obj_enter_tr.location[1] = key["y2"]+0.5
+
+                        new_obj_enter_ml = bpy.data.objects[EML].copy()
+                        new_obj_enter_ml.data = bpy.data.objects[EML].data.copy()
+                        new_obj_enter_ml.animation_data_clear()
+                        new_obj_enter_ml.location[0] = key["x2"]*-1 - 0.5
+                        new_obj_enter_ml.location[1] = key["y2"] + 0.5 + (key["h2"]-1)/2
+                        new_obj_enter_ml.dimensions[1] = key["h2"] - 1 + 0.2
+
+                        new_obj_enter_mm = bpy.data.objects[EMM].copy()
+                        new_obj_enter_mm.data = bpy.data.objects[EMM].data.copy()
+                        new_obj_enter_mm.animation_data_clear()
+                        new_obj_enter_mm.location[0] = (key["x2"]+key["w2"]/2)*-1
+                        new_obj_enter_mm.location[1] = key["y2"]+0.5+(key["h2"]-1)/2
+                        new_obj_enter_mm.dimensions = (key["w2"]-1+0.2 if key["w2"]-1+0.2 > 0 else 0.2, key["h2"] - 1 + 0.2, new_obj_enter_mm.dimensions[2])
+
+                        new_obj_enter_mr = bpy.data.objects[EMR].copy()
+                        new_obj_enter_mr.data = bpy.data.objects[EMR].data.copy()
+                        new_obj_enter_mr.animation_data_clear()
+                        new_obj_enter_mr.location[0] = (key["x2"])*-1 - 0.5 - (key["w2"]-1)
+                        new_obj_enter_mr.location[1] = key["y2"]+0.5 + (key["h2"]-1)/2
+                        new_obj_enter_mr.dimensions[1] = key["h2"] - 1 + 0.2
+
+                        new_obj_enter_bl = bpy.data.objects[EBL].copy()
+                        new_obj_enter_bl.data = bpy.data.objects[EBL].data.copy()
+                        new_obj_enter_bl.animation_data_clear()
+                        new_obj_enter_bl.location[0] = (key["x2"])*-1 - 0.5
+                        new_obj_enter_bl.location[1] = key["y2"]+0.5+key["h2"] - 1
+
+                        new_obj_enter_bm = bpy.data.objects[EBM].copy()
+                        new_obj_enter_bm.data = bpy.data.objects[EBM].data.copy()
+                        new_obj_enter_bm.animation_data_clear()
+                        new_obj_enter_bm.location[0] = (key["x2"])*-1 - 0.5 - (key["w2"]-1)/2
+                        new_obj_enter_bm.location[1] = key["y2"]+0.5+key["h2"]-1
+                        new_obj_enter_bm.dimensions[0] = key["w2"]-1+0.2 if key["w2"]-1+0.2 > 0 else 0.2
+
+                        new_obj_enter_br = bpy.data.objects[EBR].copy()
+                        new_obj_enter_br.data = bpy.data.objects[EBR].data.copy()
+                        new_obj_enter_br.animation_data_clear()
+                        new_obj_enter_br.location[0] = (key["x2"])*-1 - 0.5 - (key["w2"]-1)
+                        new_obj_enter_br.location[1] = key["y2"]+0.5+key["h2"]-1
 
 
-                    #set outcropping material to the material that was just created
-                    new_obj_enter_tl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_tm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_tr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_ml.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_mm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_mr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_bl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_bm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                    new_obj_enter_br.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        #set outcropping material to the material that was just created
+                        new_obj_enter_tl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_tm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_tr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_ml.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_mm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_mr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_bl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_bm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                        new_obj_enter_br.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
 
-                    #add outcropping to scene
-                    scn.objects.link(new_obj_enter_tl)
-                    scn.objects.link(new_obj_enter_tm)
-                    scn.objects.link(new_obj_enter_tr)
-                    scn.objects.link(new_obj_enter_ml)
-                    scn.objects.link(new_obj_enter_mm)
-                    scn.objects.link(new_obj_enter_mr)
-                    scn.objects.link(new_obj_enter_bl)
-                    scn.objects.link(new_obj_enter_bm)
-                    scn.objects.link(new_obj_enter_br)
+                        #add outcropping to scene
+                        scn.objects.link(new_obj_enter_tl)
+                        scn.objects.link(new_obj_enter_tm)
+                        scn.objects.link(new_obj_enter_tr)
+                        scn.objects.link(new_obj_enter_ml)
+                        scn.objects.link(new_obj_enter_mm)
+                        scn.objects.link(new_obj_enter_mr)
+                        scn.objects.link(new_obj_enter_bl)
+                        scn.objects.link(new_obj_enter_bm)
+                        scn.objects.link(new_obj_enter_br)
+
+                        #deselect everything
+                        for obj in scn.objects:
+                            obj.select = False
+
+                        #combine all the pieces
+                        new_obj_enter_tl.select = True
+                        new_obj_enter_tm.select = True
+                        new_obj_enter_tr.select = True
+                        new_obj_enter_ml.select = True
+                        new_obj_enter_mm.select = True
+                        new_obj_enter_mr.select = True
+                        new_obj_enter_bl.select = True
+                        new_obj_enter_bm.select = True
+                        new_obj_enter_br.select = True
+                        bpy.context.scene.objects.active = new_obj_enter_mm
+                        bpy.ops.object.join()
+
+                    else:
+                        #set default values if they aren't set
+                        if "x2" not in key:
+                            key["x2"] = 0
+                        if "y2" not in key:
+                            key["y2"] = 0
+                        if "w2" not in key:
+                            key["w2"] = 1
+                        if "h2" not in key:
+                            key["h2"] = 1
+
+
+                    #add all the key pieces
+                    new_obj_tl = bpy.data.objects[TL].copy()
+                    new_obj_tl.data = bpy.data.objects[TL].data.copy()
+                    new_obj_tl.animation_data_clear()
+                    new_obj_tl.location[0] = key["x"]*-1 - 0.5
+                    new_obj_tl.location[1] = key["y"]+0.5
+
+                    new_obj_tm = bpy.data.objects[TM].copy()
+                    new_obj_tm.data = bpy.data.objects[TM].data.copy()
+                    new_obj_tm.animation_data_clear()
+                    new_obj_tm.location[0] = (key["x"]+key["w"]/2)*-1
+                    new_obj_tm.location[1] = key["y"]+0.5
+                    new_obj_tm.dimensions[0] = key["w"]-1+0.2 if key["w"]-1+0.2 > 0 else 0.2
+
+                    new_obj_tr = bpy.data.objects[TR].copy()
+                    new_obj_tr.data = bpy.data.objects[TR].data.copy()
+                    new_obj_tr.animation_data_clear()
+                    new_obj_tr.location[0] = key["x"]*-1 - 0.5 - (key["w"]-1)
+                    new_obj_tr.location[1] = key["y"]+0.5
+
+                    new_obj_ml = bpy.data.objects[ML].copy()
+                    new_obj_ml.data = bpy.data.objects[ML].data.copy()
+                    new_obj_ml.animation_data_clear()
+                    new_obj_ml.location[0] = key["x"]*-1 - 0.5
+                    new_obj_ml.location[1] = key["y"] + 0.5 + (key["h"]-1)/2
+                    new_obj_ml.dimensions[1] = key["h"] - 1 + 0.2
+
+                    new_obj_mm = bpy.data.objects[MM].copy()
+                    new_obj_mm.data = bpy.data.objects[MM].data.copy()
+                    new_obj_mm.animation_data_clear()
+                    new_obj_mm.location[0] = (key["x"]+key["w"]/2)*-1
+                    new_obj_mm.location[1] = key["y"]+0.5+(key["h"]-1)/2
+                    new_obj_mm.dimensions = (key["w"]-1+0.2 if key["w"]-1+0.2 > 0 else 0.2, key["h"] - 1 + 0.2, new_obj_mm.dimensions[2])
+
+                    new_obj_mr = bpy.data.objects[MR].copy()
+                    new_obj_mr.data = bpy.data.objects[MR].data.copy()
+                    new_obj_mr.animation_data_clear()
+                    new_obj_mr.location[0] = (key["x"])*-1 - 0.5 - (key["w"]-1)
+                    new_obj_mr.location[1] = key["y"]+0.5 + (key["h"]-1)/2
+                    new_obj_mr.dimensions[1] = key["h"] - 1 + 0.2
+
+                    new_obj_bl = bpy.data.objects[BL].copy()
+                    new_obj_bl.data = bpy.data.objects[BL].data.copy()
+                    new_obj_bl.animation_data_clear()
+                    new_obj_bl.location[0] = (key["x"])*-1 - 0.5
+                    new_obj_bl.location[1] = key["y"]+0.5+key["h"] - 1
+
+                    new_obj_bm = bpy.data.objects[BM].copy()
+                    new_obj_bm.data = bpy.data.objects[BM].data.copy()
+                    new_obj_bm.animation_data_clear()
+                    new_obj_bm.location[0] = (key["x"])*-1 - 0.5 - (key["w"]-1)/2
+                    new_obj_bm.location[1] = key["y"]+0.5+key["h"]-1
+                    new_obj_bm.dimensions[0] = key["w"]-1+0.2 if key["w"]-1+0.2 > 0 else 0.2
+
+                    new_obj_br = bpy.data.objects[BR].copy()
+                    new_obj_br.data = bpy.data.objects[BR].data.copy()
+                    new_obj_br.animation_data_clear()
+                    new_obj_br.location[0] = (key["x"])*-1 - 0.5 - (key["w"]-1)
+                    new_obj_br.location[1] = key["y"]+0.5+key["h"]-1
+
+
+                    #set key material to the material that was just created
+                    new_obj_tl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_tm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_tr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_ml.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_mm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_mr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_bl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_bm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+                    new_obj_br.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
+
+                    #add key to scene
+                    scn.objects.link(new_obj_tl)
+                    scn.objects.link(new_obj_tm)
+                    scn.objects.link(new_obj_tr)
+                    scn.objects.link(new_obj_ml)
+                    scn.objects.link(new_obj_mm)
+                    scn.objects.link(new_obj_mr)
+                    scn.objects.link(new_obj_bl)
+                    scn.objects.link(new_obj_bm)
+                    scn.objects.link(new_obj_br)
 
                     #deselect everything
                     for obj in scn.objects:
                         obj.select = False
 
                     #combine all the pieces
-                    new_obj_enter_tl.select = True
-                    new_obj_enter_tm.select = True
-                    new_obj_enter_tr.select = True
-                    new_obj_enter_ml.select = True
-                    new_obj_enter_mm.select = True
-                    new_obj_enter_mr.select = True
-                    new_obj_enter_bl.select = True
-                    new_obj_enter_bm.select = True
-                    new_obj_enter_br.select = True
-                    bpy.context.scene.objects.active = new_obj_enter_tl
+                    new_obj_tl.select = True
+                    new_obj_tm.select = True
+                    new_obj_tr.select = True
+                    new_obj_ml.select = True
+                    new_obj_mm.select = True
+                    new_obj_mr.select = True
+                    new_obj_bl.select = True
+                    new_obj_bm.select = True
+                    new_obj_br.select = True
+                    #if outcropping exists add it to the key
+                    if new_obj_enter_mm is not None:
+                        new_obj_enter_mm.select = True
+                    bpy.context.scene.objects.active = new_obj_mm
                     bpy.ops.object.join()
 
-                else:
-                    #set default values if they aren't set
-                    if "x2" not in key:
-                        key["x2"] = 0
-                    if "y2" not in key:
-                        key["y2"] = 0
-                    if "w2" not in key:
-                        key["w2"] = 1
-                    if "h2" not in key:
-                        key["h2"] = 1
+                    #name the key
+                    if key["v"] == "" and key["w"] < 4.5:
+                        new_obj_mm.name = "Blank"
+                    elif key["v"] == "" and key["w"] >= 4.5:
+                        new_obj_mm.name = "Space"
+                    else:
+                        new_obj_mm.name = key["v"].replace("\n", " ")
 
+                    #add key switch
+                    new_switch = bpy.data.objects["switch"].copy()
+                    new_switch.data = bpy.data.objects["switch"].data.copy()
+                    new_switch.animation_data_clear()
+                    new_switch.location[0] = (key["x"])*-1 - (key["w"])/2
+                    new_switch.location[1] = key["y"]+key["h"]/2
+                    scn.objects.link(new_switch)
+                    new_switch.name = "switch: %s-%s"%(key["row"], key["col"])
 
-                #add all the key pieces
-                new_obj_tl = bpy.data.objects[TL].copy()
-                new_obj_tl.data = bpy.data.objects[TL].data.copy()
-                new_obj_tl.animation_data_clear()
-                new_obj_tl.location[0] = key["x"]*-1 - 0.5
-                new_obj_tl.location[1] = key["y"]+0.5
+                    #rotate key
+                    if "r" in key:
+                        if "rx" not in key:
+                            key["rx"] = 0
+                        if "ry" not in key:
+                            key["ry"] = 0
 
-                new_obj_tm = bpy.data.objects[TM].copy()
-                new_obj_tm.data = bpy.data.objects[TM].data.copy()
-                new_obj_tm.animation_data_clear()
-                new_obj_tm.location[0] = (key["x"]+key["w"]/2)*-1
-                new_obj_tm.location[1] = key["y"]+0.5
-                new_obj_tm.dimensions[0] = key["w"]-1+0.2 if key["w"]-1+0.2 > 0 else 0.2
+                        empty = bpy.data.objects.new("rotate", None)
+                        empty.location = (key["rx"]*-1, key["ry"], 0.3)
+                        scn.objects.link(empty)
 
-                new_obj_tr = bpy.data.objects[TR].copy()
-                new_obj_tr.data = bpy.data.objects[TR].data.copy()
-                new_obj_tr.animation_data_clear()
-                new_obj_tr.location[0] = key["x"]*-1 - 0.5 - (key["w"]-1)
-                new_obj_tr.location[1] = key["y"]+0.5
+                        #deselect everything
+                        for obj in scn.objects:
+                            obj.select = False
 
-                new_obj_ml = bpy.data.objects[ML].copy()
-                new_obj_ml.data = bpy.data.objects[ML].data.copy()
-                new_obj_ml.animation_data_clear()
-                new_obj_ml.location[0] = key["x"]*-1 - 0.5
-                new_obj_ml.location[1] = key["y"] + 0.5 + (key["h"]-1)/2
-                new_obj_ml.dimensions[1] = key["h"] - 1 + 0.2
+                        empty.select = True
+                        new_obj_mm.select = True
+                        new_switch.select = True
 
-                new_obj_mm = bpy.data.objects[MM].copy()
-                new_obj_mm.data = bpy.data.objects[MM].data.copy()
-                new_obj_mm.animation_data_clear()
-                new_obj_mm.location[0] = (key["x"]+key["w"]/2)*-1
-                new_obj_mm.location[1] = key["y"]+0.5+(key["h"]-1)/2
-                new_obj_mm.dimensions = (key["w"]-1+0.2 if key["w"]-1+0.2 > 0 else 0.2, key["h"] - 1 + 0.2, new_obj_mm.dimensions[2])
+                        scn.objects.active = empty
+                        bpy.ops.object.parent_set(type="OBJECT")
 
-                new_obj_mr = bpy.data.objects[MR].copy()
-                new_obj_mr.data = bpy.data.objects[MR].data.copy()
-                new_obj_mr.animation_data_clear()
-                new_obj_mr.location[0] = (key["x"])*-1 - 0.5 - (key["w"]-1)
-                new_obj_mr.location[1] = key["y"]+0.5 + (key["h"]-1)/2
-                new_obj_mr.dimensions[1] = key["h"] - 1 + 0.2
+                        empty.rotation_euler[2] = pi * (key["r"]*-1) / 180
 
-                new_obj_bl = bpy.data.objects[BL].copy()
-                new_obj_bl.data = bpy.data.objects[BL].data.copy()
-                new_obj_bl.animation_data_clear()
-                new_obj_bl.location[0] = (key["x"])*-1 - 0.5
-                new_obj_bl.location[1] = key["y"]+0.5+key["h"] - 1
+                        #deselect everything
+                        for obj in scn.objects:
+                            obj.select = False
 
-                new_obj_bm = bpy.data.objects[BM].copy()
-                new_obj_bm.data = bpy.data.objects[BM].data.copy()
-                new_obj_bm.animation_data_clear()
-                new_obj_bm.location[0] = (key["x"])*-1 - 0.5 - (key["w"]-1)/2
-                new_obj_bm.location[1] = key["y"]+0.5+key["h"]-1
-                new_obj_bm.dimensions[0] = key["w"]-1+0.2 if key["w"]-1+0.2 > 0 else 0.2
+                        new_obj_mm.select = True
+                        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                        new_switch.select = True
+                        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
 
-                new_obj_br = bpy.data.objects[BR].copy()
-                new_obj_br.data = bpy.data.objects[BR].data.copy()
-                new_obj_br.animation_data_clear()
-                new_obj_br.location[0] = (key["x"])*-1 - 0.5 - (key["w"]-1)
-                new_obj_br.location[1] = key["y"]+0.5+key["h"]-1
+                        #deselect everything
+                        for obj in scn.objects:
+                            obj.select = False
 
+                        empty.select = True
+                        bpy.ops.object.delete(use_global=False)
 
-                #set key material to the material that was just created
-                new_obj_tl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_tm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_tr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_ml.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_mm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_mr.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_bl.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_bm.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-                new_obj_br.active_material = bpy.data.materials["%s-%s"%(key["row"], key["col"])]
-
-                #add key to scene
-                scn.objects.link(new_obj_tl)
-                scn.objects.link(new_obj_tm)
-                scn.objects.link(new_obj_tr)
-                scn.objects.link(new_obj_ml)
-                scn.objects.link(new_obj_mm)
-                scn.objects.link(new_obj_mr)
-                scn.objects.link(new_obj_bl)
-                scn.objects.link(new_obj_bm)
-                scn.objects.link(new_obj_br)
-
-                #deselect everything
-                for obj in scn.objects:
-                    obj.select = False
-
-                #combine all the pieces
-                new_obj_tl.select = True
-                new_obj_tm.select = True
-                new_obj_tr.select = True
-                new_obj_ml.select = True
-                new_obj_mm.select = True
-                new_obj_mr.select = True
-                new_obj_bl.select = True
-                new_obj_bm.select = True
-                new_obj_br.select = True
-                #if outcropping exists add it to the key
-                if new_obj_enter_tl is not None:
-                    new_obj_enter_tl.select = True
-                bpy.context.scene.objects.active = new_obj_tl
-                bpy.ops.object.join()
-
-                #name the key
-                if key["v"] == "" and key["w"] < 4.5:
-                    new_obj_tl.name = "Blank"
-                elif key["v"] == "" and key["w"] >= 4.5:
-                    new_obj_tl.name = "Space"
-                else:
-                    new_obj_tl.name = key["v"].replace("\n", " ")
-
-                new_switch = bpy.data.objects["switch"].copy()
-                new_switch.data = bpy.data.objects["switch"].data.copy()
-                new_switch.animation_data_clear()
-                new_switch.location[0] = (key["x"])*-1 - (key["w"])/2
-                new_switch.location[1] = key["y"]+key["h"]/2
-                scn.objects.link(new_switch)
-                new_switch.name = "switch: %s-%s"%(key["row"], key["col"])
-
-                #set the keyboard width and height if it was smaller than the current width
-                if key["x"]+key["w"] > width:
-                    width = key["x"]+key["w"]
-                if key["y"] + key["h"] > height:
-                    height = key["y"] + key["h"]
+                    #set the keyboard width and height if it was smaller than the current width
+                    if key["x"]+key["w"] > width:
+                        width = key["x"]+key["w"]
+                    if key["y"] + key["h"] > height:
+                        height = key["y"] + key["h"]
 
         m = Material()
         m.set_cycles()
@@ -654,6 +754,28 @@ def read(filepath):
         bpy.ops.object.join()
         #name the case
         side5.name = "Case"
+
+        if "switchType" in keyboard:
+            if keyboard["switchType"] == "MX1A-11xx":
+                stemColor = [0, 0, 0, 1]
+            elif keyboard["switchType"] == "MX1A-A1xx":
+                stemColor = [1, 1, 1, 1]
+            elif keyboard["switchType"] == "MX1A-C1xx":
+                stemColor = [1, 1, 1, 0.8]
+            elif keyboard["switchType"] == "MX1A-E1xx":
+                stemColor = [0, 0.7, 1, 1]
+            elif keyboard["switchType"] == "MX1A-F1xx":
+                stemColor = [0, 0.6, 0.25, 1]
+            elif keyboard["switchType"] == "MX1A-G1xx":
+                stemColor = [0.6, 0.3, 0, 1]
+            elif keyboard["switchType"] == "MX1A-L1xx":
+                stemColor = [1, 0, 0, 1]
+            else:
+                stemColor = [0, 0.7, 1, 1]
+        else:
+            stemColor = [0, 0.7, 1, 1]
+
+        bpy.data.materials["Stem"].node_tree.nodes["Diffuse BSDF"].inputs["Color"].default_value = stemColor
 
         #deselect everything
         for obj in scn.objects:
