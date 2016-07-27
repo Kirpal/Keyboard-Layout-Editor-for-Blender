@@ -396,7 +396,7 @@ def read(filepath):
                         BM = key["p"] + 'BMF'
                         BR = key["p"] + 'BRF'
 
-                    if key["p"] == "DCS" and key["x2"]+key["w2"] > key["x"]+key["w"]:
+                    if key["p"] == "DCS" and key["x2"] + key["w2"] > key["x"] + key["w"]:
                         TR = key["p"] + 'TRF'
                         MR = key["p"] + 'MRF'
                         BR = key["p"] + 'BRF'
@@ -718,7 +718,8 @@ def read(filepath):
                         # new material for legend
                         m = Material()
                         m.set_cycles()
-                        m.make_material("legend: %s-%s" % (key["row"], key["col"]))
+                        m.make_material("legend: %s-%s" %
+                                        (key["row"], key["col"]))
                         # make new diffuse node
                         diffuseBSDF = m.nodes['Diffuse BSDF']
                         # if legend color is set convert hex to rgb and set diffuse color
@@ -736,12 +737,14 @@ def read(filepath):
                         # add material output node
                         materialOutput = m.nodes['Material Output']
                         # add glossy node
-                        glossyBSDF = m.makeNode('ShaderNodeBsdfGlossy', 'Glossy BSDF')
+                        glossyBSDF = m.makeNode(
+                            'ShaderNodeBsdfGlossy', 'Glossy BSDF')
                         # set glossy node color to white and roughness to 0.3
                         glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
                         glossyBSDF.inputs["Roughness"].default_value = 0.3
                         # add mix node
-                        mixShader = m.makeNode('ShaderNodeMixShader', 'Mix Shader')
+                        mixShader = m.makeNode(
+                            'ShaderNodeMixShader', 'Mix Shader')
                         # set mix node factor to 0.8
                         mixShader.inputs['Fac'].default_value = 0.8
                         # connect glossy and diffuse nodes to the mix node, and connect
@@ -750,12 +753,14 @@ def read(filepath):
                         m.link(diffuseBSDF, 'BSDF', mixShader, 2)
                         m.link(mixShader, 'Shader', materialOutput, 'Surface')
 
-                        #add text
-                        new_label = bpy.data.curves.new(type="FONT", name="keylabel")
+                        # add text
+                        new_label = bpy.data.curves.new(
+                            type="FONT", name="keylabel")
                         new_label = bpy.data.objects.new("label", new_label)
                         new_label.data.body = key["v"]
                         new_label.data.size = 0.2
-                        new_label.location = [key["x"]*-1-0.25, key["y"]+new_label.dimensions[1]+0.25, 0.8]
+                        new_label.location = [
+                            key["x"] * -1 - 0.25, key["y"] + new_label.dimensions[1] + 0.25, 0.8]
                         new_label.rotation_euler[2] = pi
                         scn.objects.link(new_label)
 
@@ -826,9 +831,9 @@ def read(filepath):
 
                 # set the keyboard width and height if it was smaller than the
                 # current width
-                if key["x"] + key["w"] + 0.05> width:
+                if key["x"] + key["w"] + 0.05 > width:
                     width = key["x"] + key["w"] + 0.05
-                if key["y"] + key["h"] +0.05> height:
+                if key["y"] + key["h"] + 0.05 > height:
                     height = key["y"] + key["h"] + 0.05
 
     m = Material()
@@ -936,11 +941,14 @@ def read(filepath):
     else:
         stemColor = [0, 0.7, 1, 1]
 
-    bpy.data.materials["Stem"].node_tree.nodes["Diffuse BSDF"].inputs["Color"].default_value = stemColor
+    bpy.data.materials["Stem"].node_tree.nodes[
+        "Diffuse BSDF"].inputs["Color"].default_value = stemColor
 
     if "led" in keyboard:
-        bpy.data.materials["led"].node_tree.nodes["Emission"].inputs["Color"].default_value = [keyboard["led"][0]/255, keyboard["led"][1]/255, keyboard["led"][2]/255, 1]
-        bpy.data.materials["led"].node_tree.nodes["Emission"].inputs["Strength"].default_value = keyboard["led"][3]*5
+        bpy.data.materials["led"].node_tree.nodes["Emission"].inputs["Color"].default_value = [
+            keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
+        bpy.data.materials["led"].node_tree.nodes["Emission"].inputs[
+            "Strength"].default_value = keyboard["led"][3] * 5
 
     # deselect everything
     for obj in scn.objects:
