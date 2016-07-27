@@ -1,8 +1,8 @@
-#addon details
+# addon details
 bl_info = {
     "name": "Import: KLE Raw JSON format (.json)",
     "author": "/u/kdem007",
-    "version": (1, 3),
+    "version": (1, 4),
     "blender": (2, 57, 0),
     "location": "File > Import-Export > Keyboard Layout Editor Raw(.json) ",
     "description": "Import Keyboard Layouts",
@@ -19,7 +19,9 @@ else:
 
 from bpy.props import StringProperty, BoolProperty
 
-#main addon class
+# main addon class
+
+
 class JSONImporter(bpy.types.Operator):
     """Load Keyboard Layout data"""
     bl_idname = "import_mesh.json"
@@ -27,8 +29,8 @@ class JSONImporter(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     filepath = StringProperty(
-            subtype='FILE_PATH',
-            )
+        subtype='FILE_PATH',
+    )
     filter_glob = StringProperty(default="*.json", options={'HIDDEN'})
 
     def execute(self, context):
@@ -41,17 +43,23 @@ class JSONImporter(bpy.types.Operator):
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
-#add to import menu
+# add to import menu
+
+
 def menu_import(self, context):
     self.layout.operator(JSONImporter.bl_idname, text="KLE Raw Data (.json)")
 
-#register addon
+# register addon
+
+
 def register():
     bpy.utils.register_module(__name__)
 
     bpy.types.INFO_MT_file_import.append(menu_import)
 
-#unregister addon
+# unregister addon
+
+
 def unregister():
     bpy.utils.unregister_module(__name__)
 

@@ -2,8 +2,9 @@
 Allows you to import keyboard layouts into blender and have them render in 3d
 ####To-Do
 - [x] Add support for ISO enter
-- [ ] Add key labels
+- [x] Add key labels
 - [ ] Add more key profiles (DSA and DCS are done)
+- [ ] Add support for fonts and other CSS styles
 
 
 ##How to install Addon:
@@ -22,6 +23,14 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 2. Go to File>Import>KLE Raw Data (.json)
 3. Select the “keyboard-layout.json” that you downloaded from [Keyboard Layout Editor](http://keyboard-layout-editor.com) and click “Import KLE Raw JSON” at the top right
 4. All Done!
+
+##How to add LEDs:
++ Add the following line to the object at the beginning (the one with "backcolor" in it):
+
+    `"led" : [RED, GREEN, BLUE, BRIGHTNESS]` *(you may need to add a comma to the line above)*
+    + RED, GREEN, and BLUE are out of 255, and BRIGHTNESS is from 0 to 1
+
+
 
 
 ##Examples:
