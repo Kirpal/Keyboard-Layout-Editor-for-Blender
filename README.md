@@ -31,6 +31,8 @@ Allows you to import keyboard layouts into blender and have them render in 3d
     `"led" : [RED, GREEN, BLUE, BRIGHTNESS]` *(you may need to add a comma to the line above)*
     + RED, GREEN, and BLUE are out of 255, and BRIGHTNESS is from 0 to 1
 
++ To make the keycap legends backlit, make the legend color the same as whatever color you made the LEDs
+
 
 
 

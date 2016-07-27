@@ -720,38 +720,58 @@ def read(filepath):
                         m.set_cycles()
                         m.make_material("legend: %s-%s" %
                                         (key["row"], key["col"]))
-                        # make new diffuse node
-                        diffuseBSDF = m.nodes['Diffuse BSDF']
-                        # if legend color is set convert hex to rgb and set diffuse color
-                        # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
-                        # 1)/#cccccc
-                        if "t" in key:
-                            c = key["t"]
-                            rgb = hex2rgb(key["t"])
-                            diffuseBSDF.inputs["Color"].default_value = [
-                                rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
-                        else:
-                            diffuseBSDF.inputs["Color"].default_value = [
-                                0, 0, 0, 1]
 
-                        # add material output node
-                        materialOutput = m.nodes['Material Output']
-                        # add glossy node
-                        glossyBSDF = m.makeNode(
-                            'ShaderNodeBsdfGlossy', 'Glossy BSDF')
-                        # set glossy node color to white and roughness to 0.3
-                        glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
-                        glossyBSDF.inputs["Roughness"].default_value = 0.3
-                        # add mix node
-                        mixShader = m.makeNode(
-                            'ShaderNodeMixShader', 'Mix Shader')
-                        # set mix node factor to 0.8
-                        mixShader.inputs['Fac'].default_value = 0.8
-                        # connect glossy and diffuse nodes to the mix node, and connect
-                        # that to the material output
-                        m.link(glossyBSDF, 'BSDF', mixShader, 1)
-                        m.link(diffuseBSDF, 'BSDF', mixShader, 2)
-                        m.link(mixShader, 'Shader', materialOutput, 'Surface')
+                        if "led" in keyboard and "t" in key and hex2rgb(key["t"])[0] == keyboard["led"][0] and hex2rgb(key["t"])[1] == keyboard["led"][1] and hex2rgb(key["t"])[2] == keyboard["led"][2]:
+                            # make new emission node
+                            emission = m.makeNode(
+                                'ShaderNodeEmission', 'Emission')
+                            # set legend color
+                            emission.inputs["Color"].default_value = [
+                                keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
+                            emission.inputs[
+                                "Strength"].default_value = keyboard["led"][3] * 5
+
+                            # add material output node
+                            materialOutput = m.nodes['Material Output']
+                            # attach emission to material output
+                            m.link(emission, 'Emission',
+                                   materialOutput, 'Surface')
+                        else:
+                            # make new diffuse node
+                            diffuseBSDF = m.nodes['Diffuse BSDF']
+                            # if legend color is set convert hex to rgb and set diffuse color
+                            # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
+                            # 1)/#cccccc
+                            if "t" in key:
+                                c = key["t"]
+                                rgb = hex2rgb(key["t"])
+                                diffuseBSDF.inputs["Color"].default_value = [
+                                    rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
+                            else:
+                                diffuseBSDF.inputs["Color"].default_value = [
+                                    0, 0, 0, 1]
+
+                            # add material output node
+                            materialOutput = m.nodes['Material Output']
+                            # add glossy node
+                            glossyBSDF = m.makeNode(
+                                'ShaderNodeBsdfGlossy', 'Glossy BSDF')
+                            # set glossy node color to white and roughness to
+                            # 0.3
+                            glossyBSDF.inputs[
+                                "Color"].default_value = [1, 1, 1, 1]
+                            glossyBSDF.inputs["Roughness"].default_value = 0.3
+                            # add mix node
+                            mixShader = m.makeNode(
+                                'ShaderNodeMixShader', 'Mix Shader')
+                            # set mix node factor to 0.8
+                            mixShader.inputs['Fac'].default_value = 0.8
+                            # connect glossy and diffuse nodes to the mix node, and connect
+                            # that to the material output
+                            m.link(glossyBSDF, 'BSDF', mixShader, 1)
+                            m.link(diffuseBSDF, 'BSDF', mixShader, 2)
+                            m.link(mixShader, 'Shader',
+                                   materialOutput, 'Surface')
 
                         # add text
                         new_label = bpy.data.curves.new(
