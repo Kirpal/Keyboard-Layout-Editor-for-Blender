@@ -5,12 +5,13 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 - [x] Add key labels
 - [ ] Add more key profiles (DSA and DCS are done)
 - [ ] Add support for fonts and other CSS styles
+- [ ] Add legend alignment and front legends
 
 
 ##How to install Addon:
 1. Download zip
 2. Open Blender
-3. Go to File>User Preferences (Ctrl + Alt + U) 
+3. Go to File>User Preferences (Ctrl + Alt + U)
 4. Select the "Add-ons" tab.
 5. Click “Install from File...” at the bottom of the panel
 6. Select the zip archive that you downloaded and click “Install from File…” at the top right
