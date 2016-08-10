@@ -44,6 +44,15 @@ class Material:
             scn.render.engine = 'CYCLES'
 
     def make_material(self, name):
+        matNames = []
+        matPos = {}
+        for position, material in enumerate(bpy.data.materials):
+            matNames.append(material.name)
+            matPos[material.name] = position
+
+        if name in matNames:
+            bpy.data.materials[matPos[name]].name = name + ".000"
+
         self.mat = bpy.data.materials.new(name)
         self.mat.use_nodes = True
         self.nodes = self.mat.node_tree.nodes
@@ -72,7 +81,7 @@ class Material:
 
 
 def getKey(filePath):
-        # load JSON file
+    # load JSON file
     layout = json.load(open(filePath, encoding="UTF-8",
                             errors="replace"), strict=False)
     # make empty keyboard dict
@@ -778,9 +787,14 @@ def read(filepath):
                             type="FONT", name="keylabel")
                         new_label = bpy.data.objects.new("label", new_label)
                         new_label.data.body = key["v"]
+                        # bpy.data.objects["Text"].data.font = bpy.data.fonts.load(filepath="D:\\Downloads\\Fonts\\BLACKOUT.TTF")
                         new_label.data.size = 0.2
-                        new_label.location = [
-                            key["x"] * -1 - 0.25, key["y"] + new_label.dimensions[1] + 0.25, 0.8]
+                        if key["p"] == "DCS":
+                            new_label.location = [
+                                key["x"] * -1 - 0.25, key["y"] + new_label.dimensions[1] + 0.25, 0.8]
+                        elif key["p"] == "DSA":
+                            new_label.location = [
+                                key["x"] * -1 - 0.25, key["y"] + new_label.dimensions[1] + 0.35, 0.8]
                         new_label.rotation_euler[2] = pi
                         scn.objects.link(new_label)
 
@@ -799,6 +813,8 @@ def read(filepath):
                         bpy.ops.object.convert(target='MESH')
                         for edge in bpy.context.object.data.edges:
                             edge.crease = 1
+
+                        new_label.location[2] += 0.001
 
                         # deselect everything
                         for obj in scn.objects:
