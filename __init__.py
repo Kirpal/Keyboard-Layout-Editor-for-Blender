@@ -10,14 +10,7 @@ bl_info = {
     "category": "Import-Export",
 }
 
-if "bpy" in locals():
-    import importlib
-    if "import_keyboard" in locals():
-        importlib.reload(import_keyboard)
-else:
-    import bpy
-
-from bpy.props import StringProperty, BoolProperty
+import bpy
 
 # main addon class
 
@@ -28,10 +21,11 @@ class JSONImporter(bpy.types.Operator):
     bl_label = "Import KLE Raw JSON"
     bl_options = {'UNDO'}
 
-    filepath = StringProperty(
+    filepath = bpy.props.StringProperty(
         subtype='FILE_PATH',
     )
-    filter_glob = StringProperty(default="*.json", options={'HIDDEN'})
+    filter_glob = bpy.props.StringProperty(
+        default="*.json", options={'HIDDEN'})
 
     def execute(self, context):
         from . import import_keyboard
