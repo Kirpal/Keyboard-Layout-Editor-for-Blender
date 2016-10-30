@@ -11,7 +11,9 @@ open.
 # import needed modules
 import bpy
 import json
+import urllib.request
 import os
+import cssutils
 from math import pi
 try:
     from HTMLParser import HTMLParser
@@ -30,15 +32,24 @@ labelMap = [
     [4, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1],  # 7 = center front & x & y
 ]
 
+gotham = bpy.data.fonts.load(os.path.join(os.path.dirname(
+    __file__), "gotham.ttf"))
+noto = bpy.data.fonts.load(os.path.join(os.path.dirname(
+    __file__), "noto.ttf"))
+
+fonts = []
+for font in range(0, 12):
+    fonts.append(None)
+
+googleFonts = json.load(open(os.path.join(os.path.dirname(
+    __file__), "fonts.json")))
+
 # Function to parse legends
 
 
 def reorderLabels(labels, align):
     ret = ["", "", "", "", "", "", "", "", "", "", "", ""]
-    print(labels)
     for pos, label in enumerate(labels):
-        print(label)
-        print(labelMap[align][pos])
         ret[labelMap[align][pos]] = label
     return ret
 
@@ -144,6 +155,7 @@ def getKey(filePath):
     rowData = {}
     # add list of keyboard rows
     keyboard["rows"] = []
+    keyboard["keyCount"] = 0
     y = 0 + 0.05
     # default align
     align = 4
@@ -298,6 +310,7 @@ def getKey(filePath):
 
                         # add the key to the current row
                         keyboard["rows"][key["row"]].append(key)
+                        keyboard["keyCount"] += 1
                     # if the previous item isn't a dict
                     else:
                         # if rowData has property set then add it to key
@@ -370,6 +383,7 @@ def getKey(filePath):
 
                         # add the key to the current row
                         keyboard["rows"][key["row"]].append(key)
+                        keyboard["keyCount"] += 1
                     x += key["w"] + 0.05
             y += 1 + 0.05
             if "ry2" in key:
@@ -389,6 +403,7 @@ def getKey(filePath):
 
 
 def read(filepath):
+    bpy.context.window.cursor_set("WAIT")
     # parse raw data into dict
     keyboard = getKey(filepath)
 
@@ -412,6 +427,36 @@ def read(filepath):
     # set width and height of keyboard
     width = 0
     height = 0
+
+    # get fonts from css
+    if "css" in keyboard:
+        css = cssutils.parseString(keyboard["css"])
+
+        for rule in css:
+            if rule.type == rule.STYLE_RULE:
+                for prop in rule.style:
+                    if prop.name == "font-family":
+                        for selector in rule.selectorList:
+                            if selector.selectorText == "*":
+                                for labelSelector in range(0, 12):
+                                    fonts[labelSelector] = prop.value.replace(
+                                        '"', "")
+                            elif int(selector.selectorText.replace(".keylabel", "")) >= 0 and int(selector.selectorText.replace(".keylabel", "")) <= 11:
+                                fonts[int(selector.selectorText.replace(
+                                    ".keylabel", ""))] = prop.value.replace('"', "")
+    for pos, font in enumerate(fonts):
+        if font == None or font not in googleFonts.keys():
+            fonts[pos] = gotham
+        else:
+            tempDir = bpy.app.tempdir
+            urllib.request.urlretrieve(
+                googleFonts[font], os.path.join(tempDir, font + ".ttf"))
+            fonts[pos] = bpy.data.fonts.load(
+                os.path.join(tempDir, font + ".ttf"))
+
+    bpy.context.window_manager.progress_begin(keyboard["keyCount"], 0)
+    bpy.context.window.cursor_set("DEFAULT")
+    currentKey = 0
 
     # iterate over rows in keyboard
     for row in keyboard["rows"]:
@@ -813,78 +858,93 @@ def read(filepath):
                     new_led.name = "led: %s-%s" % (key["row"], key["col"])
 
                 for pos, label in enumerate(key["v"]["labels"]):
-                    print(label)
                     if label != "":
-                        try:
-                            label.encode('utf-8')
-                        except UnicodeEncodeError:
-                            print("Not ASCII")
+
+                        # new material for legend
+                        m = Material()
+                        m.set_cycles()
+                        m.make_material("legend: %s-%s" %
+                                        (key["row"], key["col"]))
+
+                        if "t" in key and key["t"][pos] != None and "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"]:
+                            # make new emission node
+                            emission = m.makeNode(
+                                'ShaderNodeEmission', 'Emission')
+                            # set legend color
+                            emission.inputs["Color"].default_value = [
+                                keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
+                            emission.inputs[
+                                "Strength"].default_value = keyboard["led"][3] * 5
+
+                            # add material output node
+                            materialOutput = m.nodes['Material Output']
+                            # attach emission to material output
+                            m.link(emission, 'Emission',
+                                   materialOutput, 'Surface')
                         else:
-                            # new material for legend
-                            m = Material()
-                            m.set_cycles()
-                            m.make_material("legend: %s-%s" %
-                                            (key["row"], key["col"]))
-
-                            if "t" in key and key["t"][pos] != None and "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"]:
-                                # make new emission node
-                                emission = m.makeNode(
-                                    'ShaderNodeEmission', 'Emission')
-                                # set legend color
-                                emission.inputs["Color"].default_value = [
-                                    keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
-                                emission.inputs[
-                                    "Strength"].default_value = keyboard["led"][3] * 5
-
-                                # add material output node
-                                materialOutput = m.nodes['Material Output']
-                                # attach emission to material output
-                                m.link(emission, 'Emission',
-                                       materialOutput, 'Surface')
-                            else:
-                                # make new diffuse node
-                                diffuseBSDF = m.nodes['Diffuse BSDF']
-                                # if legend color is set convert hex to rgb and set diffuse color
-                                # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
-                                # 1)/#cccccc
-                                if "t" in key and key["t"][pos] != None:
-                                    if len(key["t"]) > 1:
-                                        c = key["t"][pos]
-                                        rgb = hex2rgb(key["t"][pos])
-                                        diffuseBSDF.inputs["Color"].default_value = [
-                                            rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
-                                    else:
-                                        c = key["t"][0]
-                                        rgb = hex2rgb(key["t"][pos])
-                                        diffuseBSDF.inputs["Color"].default_value = [
-                                            rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
-                                else:
+                            # make new diffuse node
+                            diffuseBSDF = m.nodes['Diffuse BSDF']
+                            # if legend color is set convert hex to rgb and set diffuse color
+                            # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
+                            # 1)/#cccccc
+                            if "t" in key and key["t"][pos] != None:
+                                if len(key["t"]) > 1:
+                                    c = key["t"][pos]
+                                    rgb = hex2rgb(key["t"][pos])
                                     diffuseBSDF.inputs["Color"].default_value = [
-                                        0, 0, 0, 1]
+                                        rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
+                                else:
+                                    c = key["t"][0]
+                                    rgb = hex2rgb(key["t"][pos])
+                                    diffuseBSDF.inputs["Color"].default_value = [
+                                        rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
+                            else:
+                                diffuseBSDF.inputs["Color"].default_value = [
+                                    0, 0, 0, 1]
 
-                                # add material output node
-                                materialOutput = m.nodes['Material Output']
-                                # add glossy node
-                                glossyBSDF = m.makeNode(
-                                    'ShaderNodeBsdfGlossy', 'Glossy BSDF')
-                                # set glossy node color to white and roughness to
-                                # 0.3
-                                glossyBSDF.inputs[
-                                    "Color"].default_value = [1, 1, 1, 1]
-                                glossyBSDF.inputs[
-                                    "Roughness"].default_value = 0.3
-                                # add mix node
-                                mixShader = m.makeNode(
-                                    'ShaderNodeMixShader', 'Mix Shader')
-                                # set mix node factor to 0.8
-                                mixShader.inputs['Fac'].default_value = 0.8
-                                # connect glossy and diffuse nodes to the mix node, and connect
-                                # that to the material output
-                                m.link(glossyBSDF, 'BSDF', mixShader, 1)
-                                m.link(diffuseBSDF, 'BSDF', mixShader, 2)
-                                m.link(mixShader, 'Shader',
-                                       materialOutput, 'Surface')
+                            # add material output node
+                            materialOutput = m.nodes['Material Output']
+                            # add glossy node
+                            glossyBSDF = m.makeNode(
+                                'ShaderNodeBsdfGlossy', 'Glossy BSDF')
+                            # set glossy node color to white and roughness to
+                            # 0.3
+                            glossyBSDF.inputs[
+                                "Color"].default_value = [1, 1, 1, 1]
+                            glossyBSDF.inputs[
+                                "Roughness"].default_value = 0.3
+                            # add mix node
+                            mixShader = m.makeNode(
+                                'ShaderNodeMixShader', 'Mix Shader')
+                            # set mix node factor to 0.8
+                            mixShader.inputs['Fac'].default_value = 0.8
+                            # connect glossy and diffuse nodes to the mix node, and connect
+                            # that to the material output
+                            m.link(glossyBSDF, 'BSDF', mixShader, 1)
+                            m.link(diffuseBSDF, 'BSDF', mixShader, 2)
+                            m.link(mixShader, 'Shader',
+                                   materialOutput, 'Surface')
 
+                        alignText = [
+                            ["LEFT", "TOP"],
+                            ["CENTER", "TOP"],
+                            ["RIGHT", "TOP"],
+                            ["LEFT", "CENTER"],
+                            ["CENTER", "CENTER"],
+                            ["RIGHT", "CENTER"],
+                            ["LEFT", "BOTTOM"],
+                            ["CENTER", "BOTTOM"],
+                            ["RIGHT", "BOTTOM"]
+                        ]
+
+                        # adjust legends based on keycap type
+                        def alignLegendsProfile(p):
+                            return {
+                                "DCS": [0.25, 0.15, 0.25, 0.325],
+                                "DSA": [0.2, 0.25, 0.2, 0.25]
+                            }.get(p, [0.25, 0.15, 0.25, 0.325])
+
+                        try:
                             # add text
                             new_label = bpy.data.curves.new(
                                 type="FONT", name="keylabel")
@@ -892,101 +952,75 @@ def read(filepath):
                                 "label", new_label)
                             new_label.data.body = key[
                                 "v"]["labels"][pos].upper()
-                            new_label.data.font = bpy.data.fonts.load(os.path.join(os.path.dirname(
-                                __file__), "gotham.ttf"))
 
-                            # adjust legends based on keycap type
-                            def alignLegendsProfile(p):
-                                return {
-                                    "DCS": [0.3, 0.3],
-                                    "DSA": [0.3, 0.4]
-                                }.get(p, [0.3, 0.3])
-                            # new_label.data.font = bpy.data.fonts.load('D:\\Documents\\Fonts\\bebas\\BebasNeue Bold.otf')
+                            new_label.data.font = fonts[pos]
                             new_label.data.size = key["f"][pos] / 15
-                            #new_label.data.text_boxes[0].width = new_obj_mm.dimensions[0] - 2*alignLegendsProfile(key["p"])[0]
+                            new_label.data.text_boxes[0].width = new_obj_mm.dimensions[
+                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+                            new_label.data.text_boxes[0].height = new_obj_mm.dimensions[
+                                1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
+                            new_label.data.text_boxes[
+                                0].y = -1 * (key["f"][pos] / 15)
+                            new_label.data.align_x = alignText[pos][0]
+                            new_label.data.align_y = alignText[pos][1]
+
+                            new_label.location = [-1 * key["x"] - alignLegendsProfile(
+                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 0.8]
+                            new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
                             scn.update()
 
-                            # align legends (x, y, text align x, text align y)
-                            def alignLegends(legend):
-                                if legend == 0:
-                                    return [
-                                        0 + alignLegendsProfile(key["p"])[0],
-                                        0 + alignLegendsProfile(key["p"])[1],
-                                        0,
-                                        0
-                                    ]
-                                elif legend == 1:
-                                    return [
-                                        new_obj_mm.dimensions[0] / 2,
-                                        0 + alignLegendsProfile(key["p"])[1],
-                                        new_label.dimensions[0] / 2,
-                                        0
-                                    ]
-                                elif legend == 2:
-                                    return [
-                                        new_obj_mm.dimensions[
-                                            0] - alignLegendsProfile(key["p"])[0],
-                                        0 + alignLegendsProfile(key["p"])[1],
-                                        new_label.dimensions[0],
-                                        0
-                                    ]
-                                elif legend == 3:
-                                    return [
-                                        0 + alignLegendsProfile(key["p"])[0],
-                                        new_obj_mm.dimensions[1] / 2,
-                                        0,
-                                        new_label.dimensions[1] / 2
-                                    ]
-                                elif legend == 4:
-                                    return [
-                                        new_obj_mm.dimensions[0] / 2,
-                                        new_obj_mm.dimensions[1] / 2,
-                                        new_label.dimensions[0] / 2,
-                                        new_label.dimensions[1] / 2
-                                    ]
-                                elif legend == 5:
-                                    return [
-                                        new_obj_mm.dimensions[
-                                            0] - alignLegendsProfile(key["p"])[0],
-                                        new_obj_mm.dimensions[1] / 2,
-                                        new_label.dimensions[0],
-                                        new_label.dimensions[1] / 2
-                                    ]
-                                elif legend == 6:
-                                    return [
-                                        0 + alignLegendsProfile(key["p"])[0],
-                                        new_obj_mm.dimensions[
-                                            1] - alignLegendsProfile(key["p"])[1],
-                                        0,
-                                        new_label.dimensions[1]
-                                    ]
-                                elif legend == 7:
-                                    return [
-                                        new_obj_mm.dimensions[0] / 2,
-                                        new_obj_mm.dimensions[
-                                            1] - alignLegendsProfile(key["p"])[1],
-                                        new_label.dimensions[0] / 2,
-                                        new_label.dimensions[1]
-                                    ]
-                                elif legend == 8:
-                                    return [
-                                        new_obj_mm.dimensions[
-                                            0] - alignLegendsProfile(key["p"])[0],
-                                        new_obj_mm.dimensions[
-                                            1] - alignLegendsProfile(key["p"])[1],
-                                        new_label.dimensions[0],
-                                        new_label.dimensions[1]
-                                    ]
+                            # deselect everything
+                            for obj in scn.objects:
+                                obj.select = False
 
-                            new_label.location = [
-                                -1 * key["x"] - alignLegends(pos)[0] + alignLegends(pos)[2], key["y"] + alignLegends(pos)[1] + alignLegends(pos)[3], 0.8]
+                            new_label.select = True
+                            scn.objects.active = new_label
+
+                            bpy.ops.object.modifier_add(type='SHRINKWRAP')
+                            new_label.modifiers["Shrinkwrap"].offset = 0.0005
+                            new_label.modifiers[
+                                "Shrinkwrap"].target = new_obj_mm
+                            new_label.to_mesh(scn, True, "PREVIEW")
+                            new_label.active_material = bpy.data.materials[
+                                "legend: %s-%s" % (key["row"], key["col"])]
+                            bpy.ops.object.convert(target='MESH')
+                            for edge in bpy.context.object.data.edges:
+                                edge.crease = 1
+
+                            new_label.location[2] += 0.001
+                        except AttributeError:
+                            # add text
+                            new_label = bpy.data.curves.new(
+                                type="FONT", name="keylabel")
+                            new_label = bpy.data.objects.new(
+                                "label", new_label)
+                            new_label.data.body = key[
+                                "v"]["labels"][pos].upper()
+
+                            new_label.data.font = noto
+                            new_label.data.size = key["f"][pos] / 15
+                            new_label.data.text_boxes[0].width = new_obj_mm.dimensions[
+                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+                            new_label.data.text_boxes[0].height = new_obj_mm.dimensions[
+                                1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
+                            new_label.data.text_boxes[
+                                0].y = -1 * (key["f"][pos] / 15)
+                            new_label.data.align_x = alignText[pos][0]
+                            new_label.data.align_y = alignText[pos][1]
+
+                            new_label.location = [-1 * key["x"] - alignLegendsProfile(
+                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 0.8]
                             new_label.rotation_euler[2] = pi
+
+                            scn.objects.link(new_label)
+                            scn.update()
 
                             # deselect everything
                             for obj in scn.objects:
                                 obj.select = False
+
                             new_label.select = True
                             scn.objects.active = new_label
 
@@ -1003,14 +1037,14 @@ def read(filepath):
 
                             new_label.location[2] += 0.001
 
-                            # deselect everything
-                            for obj in scn.objects:
-                                obj.select = False
+                        # deselect everything
+                        for obj in scn.objects:
+                            obj.select = False
 
-                            new_label.select = True
-                            new_obj_mm.select = True
-                            scn.objects.active = new_obj_mm
-                            bpy.ops.object.join()
+                        new_label.select = True
+                        new_obj_mm.select = True
+                        scn.objects.active = new_obj_mm
+                        bpy.ops.object.join()
 
                 # rotate key
                 if "r" in key:
@@ -1058,6 +1092,9 @@ def read(filepath):
                     width = key["x"] + key["w"] + 0.05
                 if key["y"] + key["h"] + 0.05 > height:
                     height = key["y"] + key["h"] + 0.05
+
+            bpy.context.window_manager.progress_update(currentKey)
+            currentKey += 1
 
     m = Material()
     m.set_cycles()
@@ -1203,3 +1240,5 @@ def read(filepath):
     for object in defaultObjects:
         bpy.data.objects[object].select = True
     bpy.ops.object.delete()
+
+    bpy.context.window_manager.progress_end()
