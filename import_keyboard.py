@@ -277,13 +277,16 @@ def getKey(filePath):
                                 key["ry2"] = rowData["ry2"]
 
                         if "p" in rowData:
-                            key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace(
-                                "5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
+                            key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
                         else:
                             key["p"] = "DCS"
 
-                        if key["p"] == "" or key["p"] not in ["DSA", "DCS"]:
+                        if key["p"] == "" or key["p"] not in ["DSA", "DCS", "SA1","SA2", "SA3", "SA4"]:
                             key["p"] = "DCS"
+
+                        # Use deep dish cap
+                        if "n" in key and key["p"] in ["SA1","SA2", "SA3", "SA4"]:
+                            key["p"] = "SA3D"
 
                         # set the text on the key
                         key["v"] = {}
@@ -345,13 +348,16 @@ def getKey(filePath):
                                 key["ry2"] = rowData["ry2"]
 
                         if "p" in rowData:
-                            key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace(
+                            key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace(
                                 "5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
                         else:
                             key["p"] = "DCS"
 
-                        if key["p"] == "" or key["p"] not in ["DSA", "DCS"]:
+                        if key["p"] == "" or key["p"] not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4"]:
                             key["p"] = "DCS"
+
+                        if "n" in key and key["p"] in ["SA1","SA2", "SA3", "SA4"]:
+                            key["p"] = "SA3D"
 
                         key["xCoord"] = 0
                         key["d"] = False
@@ -408,7 +414,14 @@ def read(filepath):
     # template objects that have to be appended in and then deleted at the end
 
     defaultObjects = ["DCSTL", "DCSTM", "DCSTR", "DCSML", "DCSMM", "DCSMR", "DCSBL", "DCSBM", "DCSBR", "DCSTLF", "DCSTMF", "DCSTRF", "DCSMLF", "DCSMMF", "DCSMRF", "DCSBLF", "DCSBMF", "DCSBRF", "DCSTLS", "DCSTMS", "DCSTRS", "DCSMLS", "DCSMMS", "DCSMRS", "DCSBLS", "DCSBMS", "DCSBRS",
-                      "DSATL", "DSATM", "DSATR", "DSAML", "DSAMM", "DSAMR", "DSABL", "DSABM", "DSABR", "DSATLF", "DSATMF", "DSATRF", "DSAMLF", "DSAMMF", "DSAMRF", "DSABLF", "DSABMF", "DSABRF", "DSATLS", "DSATMS", "DSATRS", "DSAMLS", "DSAMMS", "DSAMRS", "DSABLS", "DSABMS", "DSABRS", "side", "switch", "led"]
+                      "DSATL", "DSATM", "DSATR", "DSAML", "DSAMM", "DSAMR", "DSABL", "DSABM", "DSABR", "DSATLF", "DSATMF", "DSATRF", "DSAMLF", "DSAMMF", "DSAMRF", "DSABLF", "DSABMF", "DSABRF", "DSATLS", "DSATMS", "DSATRS", "DSAMLS", "DSAMMS", "DSAMRS", "DSABLS", "DSABMS", "DSABRS",
+                      "SA1TL", "SA1TM", "SA1TR", "SA1ML", "SA1MM", "SA1MR", "SA1BL", "SA1BM", "SA1BR", # SA R1
+                      "SA2TL", "SA2TM", "SA2TR", "SA2ML", "SA2MM", "SA2MR", "SA2BL", "SA2BM", "SA2BR", # SA R2
+                      "SA3TL", "SA3TM", "SA3TR", "SA3ML", "SA3MM", "SA3MR", "SA3BL", "SA3BM", "SA3BR", # SA R3
+                      "SA3DTL", "SA3DTM", "SA3DTR", "SA3DML", "SA3DMM", "SA3DMR", "SA3DBL", "SA3DBM", "SA3DBR", #deep dish
+                      "SA4TL", "SA4TM", "SA4TR", "SA4ML", "SA4MM", "SA4MR", "SA4BL", "SA4BM", "SA4BR", # SA R4
+                      "SATLF", "SATMF", "SATRF", "SAMLF", "SAMMF", "SAMRF", "SABLF", "SABMF", "SABRF", "SATLS", "SATMS", "SATRS", "SAMLS", "SAMMS", "SAMRS", "SABLS", "SABMS", "SABRS",
+                      "side", "switch", "led"]
     # blender file with template objects
     templateBlend = os.path.join(os.path.dirname(
         __file__), "template.blend", "Object")
@@ -742,6 +755,20 @@ def read(filepath):
                     if "h2" not in key:
                         key["h2"] = 1
 
+                # check if we need the middle strip;
+                # force middle strip for DCS and DSA
+                if key["p"] in ["DCS", "DSA"] or key["h"] - 1 - 0.1 > 0:
+                    middleh_needed = True
+                else:
+                    middleh_needed = False
+                if key["p"] in ["DCS", "DSA"] or key["w"] - 1 - 0.1 > 0:
+                    middlew_needed = True
+                else:
+                    middlew_needed = False
+
+                # define overlap
+                overlap = 0.2 if key["p"] in [ "DCS", "DSA" ] else 0.0
+
                 # add all the key pieces
                 new_obj_tl = bpy.data.objects[TL].copy()
                 new_obj_tl.data = bpy.data.objects[TL].data.copy()
@@ -749,13 +776,14 @@ def read(filepath):
                 new_obj_tl.location[0] = key["x"] * -1 - 0.5
                 new_obj_tl.location[1] = key["y"] + 0.5
 
-                new_obj_tm = bpy.data.objects[TM].copy()
-                new_obj_tm.data = bpy.data.objects[TM].data.copy()
-                new_obj_tm.animation_data_clear()
-                new_obj_tm.location[0] = (key["x"] + key["w"] / 2) * -1
-                new_obj_tm.location[1] = key["y"] + 0.5
-                new_obj_tm.dimensions[0] = key["w"] - 1 + \
-                    0.2 if key["w"] - 1 + 0.2 > 0 else 0.2
+                if middlew_needed:
+                    new_obj_tm = bpy.data.objects[TM].copy()
+                    new_obj_tm.data = bpy.data.objects[TM].data.copy()
+                    new_obj_tm.animation_data_clear()
+                    new_obj_tm.location[0] = (key["x"] + key["w"] / 2) * -1
+                    new_obj_tm.location[1] = key["y"] + 0.5
+                    new_obj_tm.dimensions[0] = key["w"] - 1 + \
+                                               overlap if key["w"] - 1 + overlap > 0 else overlap
 
                 new_obj_tr = bpy.data.objects[TR].copy()
                 new_obj_tr.data = bpy.data.objects[TR].data.copy()
@@ -763,27 +791,28 @@ def read(filepath):
                 new_obj_tr.location[0] = key["x"] * -1 - 0.5 - (key["w"] - 1)
                 new_obj_tr.location[1] = key["y"] + 0.5
 
-                new_obj_ml = bpy.data.objects[ML].copy()
-                new_obj_ml.data = bpy.data.objects[ML].data.copy()
-                new_obj_ml.animation_data_clear()
-                new_obj_ml.location[0] = key["x"] * -1 - 0.5
-                new_obj_ml.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
-                new_obj_ml.dimensions[1] = key["h"] - 1 + 0.2
+                if middleh_needed:
+                    new_obj_ml = bpy.data.objects[ML].copy()
+                    new_obj_ml.data = bpy.data.objects[ML].data.copy()
+                    new_obj_ml.animation_data_clear()
+                    new_obj_ml.location[0] = key["x"] * -1 - 0.5
+                    new_obj_ml.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
+                    new_obj_ml.dimensions[1] = key["h"] - 1 + overlap
 
-                new_obj_mm = bpy.data.objects[MM].copy()
-                new_obj_mm.data = bpy.data.objects[MM].data.copy()
-                new_obj_mm.animation_data_clear()
-                new_obj_mm.location[0] = (key["x"] + key["w"] / 2) * -1
-                new_obj_mm.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
-                new_obj_mm.dimensions = (key["w"] - 1 + 0.2 if key["w"] - 1 + 0.2 > 0 else 0.2, key[
-                                         "h"] - 1 + 0.2, new_obj_mm.dimensions[2])
+                    if middlew_needed:
+                        new_obj_mm = bpy.data.objects[MM].copy()
+                        new_obj_mm.data = bpy.data.objects[MM].data.copy()
+                        new_obj_mm.animation_data_clear()
+                        new_obj_mm.location[0] = (key["x"] + key["w"] / 2) * -1
+                        new_obj_mm.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
+                        new_obj_mm.dimensions = (key["w"] - 1 + overlap if key["w"] - 1 + overlap > 0 else overlap, key["h"] - 1 + overlap, new_obj_mm.dimensions[2])
 
-                new_obj_mr = bpy.data.objects[MR].copy()
-                new_obj_mr.data = bpy.data.objects[MR].data.copy()
-                new_obj_mr.animation_data_clear()
-                new_obj_mr.location[0] = (key["x"]) * -1 - 0.5 - (key["w"] - 1)
-                new_obj_mr.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
-                new_obj_mr.dimensions[1] = key["h"] - 1 + 0.2
+                    new_obj_mr = bpy.data.objects[MR].copy()
+                    new_obj_mr.data = bpy.data.objects[MR].data.copy()
+                    new_obj_mr.animation_data_clear()
+                    new_obj_mr.location[0] = (key["x"]) * -1 - 0.5 - (key["w"] - 1)
+                    new_obj_mr.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
+                    new_obj_mr.dimensions[1] = key["h"] - 1 + overlap
 
                 new_obj_bl = bpy.data.objects[BL].copy()
                 new_obj_bl.data = bpy.data.objects[BL].data.copy()
@@ -791,14 +820,15 @@ def read(filepath):
                 new_obj_bl.location[0] = (key["x"]) * -1 - 0.5
                 new_obj_bl.location[1] = key["y"] + 0.5 + key["h"] - 1
 
-                new_obj_bm = bpy.data.objects[BM].copy()
-                new_obj_bm.data = bpy.data.objects[BM].data.copy()
-                new_obj_bm.animation_data_clear()
-                new_obj_bm.location[0] = (
-                    key["x"]) * -1 - 0.5 - (key["w"] - 1) / 2
-                new_obj_bm.location[1] = key["y"] + 0.5 + key["h"] - 1
-                new_obj_bm.dimensions[0] = key["w"] - 1 + \
-                    0.2 if key["w"] - 1 + 0.2 > 0 else 0.2
+                if middlew_needed:
+                    new_obj_bm = bpy.data.objects[BM].copy()
+                    new_obj_bm.data = bpy.data.objects[BM].data.copy()
+                    new_obj_bm.animation_data_clear()
+                    new_obj_bm.location[0] = (
+                        key["x"]) * -1 - 0.5 - (key["w"] - 1) / 2
+                    new_obj_bm.location[1] = key["y"] + 0.5 + key["h"] - 1
+                    new_obj_bm.dimensions[0] = key["w"] - 1 + \
+                                               overlap if key["w"] - 1 + overlap > 0 else overlap
 
                 new_obj_br = bpy.data.objects[BR].copy()
                 new_obj_br.data = bpy.data.objects[BR].data.copy()
@@ -809,32 +839,44 @@ def read(filepath):
                 # set key material to the material that was just created
                 new_obj_tl.active_material = bpy.data.materials[
                     "%s-%s" % (key["row"], key["col"])]
-                new_obj_tm.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
+                if middlew_needed:
+                    new_obj_tm.active_material = bpy.data.materials[
+                        "%s-%s" % (key["row"], key["col"])]
                 new_obj_tr.active_material = bpy.data.materials[
                     "%s-%s" % (key["row"], key["col"])]
-                new_obj_ml.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
-                new_obj_mm.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
-                new_obj_mr.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
+
+                if middleh_needed:
+                    new_obj_ml.active_material = bpy.data.materials[
+                        "%s-%s" % (key["row"], key["col"])]
+                    if middlew_needed:
+                        new_obj_mm.active_material = bpy.data.materials[
+                            "%s-%s" % (key["row"], key["col"])]
+                    new_obj_mr.active_material = bpy.data.materials[
+                        "%s-%s" % (key["row"], key["col"])]
+
                 new_obj_bl.active_material = bpy.data.materials[
                     "%s-%s" % (key["row"], key["col"])]
-                new_obj_bm.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
+                if middlew_needed:
+                    new_obj_bm.active_material = bpy.data.materials[
+                        "%s-%s" % (key["row"], key["col"])]
                 new_obj_br.active_material = bpy.data.materials[
                     "%s-%s" % (key["row"], key["col"])]
 
                 # add key to scene
                 scn.objects.link(new_obj_tl)
-                scn.objects.link(new_obj_tm)
+                if middlew_needed:
+                    scn.objects.link(new_obj_tm)
                 scn.objects.link(new_obj_tr)
-                scn.objects.link(new_obj_ml)
-                scn.objects.link(new_obj_mm)
-                scn.objects.link(new_obj_mr)
+
+                if middleh_needed:
+                    scn.objects.link(new_obj_ml)
+                    if middlew_needed:
+                        scn.objects.link(new_obj_mm)
+                    scn.objects.link(new_obj_mr)
+
                 scn.objects.link(new_obj_bl)
-                scn.objects.link(new_obj_bm)
+                if middlew_needed:
+                    scn.objects.link(new_obj_bm)
                 scn.objects.link(new_obj_br)
 
                 # deselect everything
@@ -843,27 +885,37 @@ def read(filepath):
 
                 # combine all the pieces
                 new_obj_tl.select = True
-                new_obj_tm.select = True
+                if middlew_needed:
+                    new_obj_tm.select = True
                 new_obj_tr.select = True
-                new_obj_ml.select = True
-                new_obj_mm.select = True
-                new_obj_mr.select = True
+
+                if middleh_needed:
+                    new_obj_ml.select = True
+                    if middlew_needed:
+                        new_obj_mm.select = True
+                    new_obj_mr.select = True
+
                 new_obj_bl.select = True
-                new_obj_bm.select = True
+                if middlew_needed:
+                    new_obj_bm.select = True
                 new_obj_br.select = True
                 # if outcropping exists add it to the key
                 if new_obj_enter_mm is not None:
                     new_obj_enter_mm.select = True
-                scn.objects.active = new_obj_mm
+                scn.objects.active = new_obj_tl
                 bpy.ops.object.join()
+
+                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.mesh.remove_doubles()
+                bpy.ops.object.mode_set(mode='OBJECT')
 
                 # name the key
                 if key["v"]["raw"] == "" and key["w"] < 4.5:
-                    new_obj_mm.name = "Blank"
+                    new_obj_tl.name = "Blank"
                 elif key["v"]["raw"] == "" and key["w"] >= 4.5:
-                    new_obj_mm.name = "Space"
+                    new_obj_tl.name = "Space"
                 else:
-                    new_obj_mm.name = HTMLParser().unescape(
+                    new_obj_tl.name = HTMLParser().unescape(
                         key["v"]["raw"].replace("\n", " "))
 
                 # add key switch
@@ -983,9 +1035,9 @@ def read(filepath):
 
                             new_label.data.font = fonts[pos]
                             new_label.data.size = key["f"][pos] / 15
-                            new_label.data.text_boxes[0].width = new_obj_mm.dimensions[
+                            new_label.data.text_boxes[0].width = new_obj_tl.dimensions[
                                 0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
-                            new_label.data.text_boxes[0].height = new_obj_mm.dimensions[
+                            new_label.data.text_boxes[0].height = new_obj_tl.dimensions[
                                 1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
                             new_label.data.text_boxes[
                                 0].y = -1 * (key["f"][pos] / 15)
@@ -1009,7 +1061,7 @@ def read(filepath):
                             bpy.ops.object.modifier_add(type='SHRINKWRAP')
                             new_label.modifiers["Shrinkwrap"].offset = 0.0005
                             new_label.modifiers[
-                                "Shrinkwrap"].target = new_obj_mm
+                                "Shrinkwrap"].target = new_obj_tl
                             new_label.to_mesh(scn, True, "PREVIEW")
                             new_label.active_material = bpy.data.materials[
                                 "legend: %s-%s" % (key["row"], key["col"])]
@@ -1029,9 +1081,9 @@ def read(filepath):
 
                             new_label.data.font = noto
                             new_label.data.size = key["f"][pos] / 15
-                            new_label.data.text_boxes[0].width = new_obj_mm.dimensions[
+                            new_label.data.text_boxes[0].width = new_obj_tl.dimensions[
                                 0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
-                            new_label.data.text_boxes[0].height = new_obj_mm.dimensions[
+                            new_label.data.text_boxes[0].height = new_obj_tl.dimensions[
                                 1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
                             new_label.data.text_boxes[
                                 0].y = -1 * (key["f"][pos] / 15)
@@ -1055,7 +1107,7 @@ def read(filepath):
                             bpy.ops.object.modifier_add(type='SHRINKWRAP')
                             new_label.modifiers["Shrinkwrap"].offset = 0.0005
                             new_label.modifiers[
-                                "Shrinkwrap"].target = new_obj_mm
+                                "Shrinkwrap"].target = new_obj_tl
                             new_label.to_mesh(scn, True, "PREVIEW")
                             new_label.active_material = bpy.data.materials[
                                 "legend: %s-%s" % (key["row"], key["col"])]
@@ -1070,8 +1122,8 @@ def read(filepath):
                             obj.select = False
 
                         new_label.select = True
-                        new_obj_mm.select = True
-                        scn.objects.active = new_obj_mm
+                        new_obj_tl.select = True
+                        scn.objects.active = new_obj_tl
                         bpy.ops.object.join()
 
                 # rotate key
@@ -1090,7 +1142,7 @@ def read(filepath):
                         obj.select = False
 
                     empty.select = True
-                    new_obj_mm.select = True
+                    new_obj_tl.select = True
                     new_switch.select = True
 
                     scn.objects.active = empty
@@ -1102,7 +1154,7 @@ def read(filepath):
                     for obj in scn.objects:
                         obj.select = False
 
-                    new_obj_mm.select = True
+                    new_obj_tl.select = True
                     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
                     new_switch.select = True
                     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
@@ -1149,6 +1201,18 @@ def read(filepath):
     m.link(glossyBSDF, 'BSDF', mixShader, 1)
     m.link(diffuseBSDF, 'BSDF', mixShader, 2)
     m.link(mixShader, 'Shader', materialOutput, 'Surface')
+
+    mp = Material()
+    mp.set_cycles()
+    mp.make_material("plate")
+
+    # make the case material
+    materialOutput = mp.nodes['Material Output']
+    mixShader = mp.makeNode('ShaderNodeMixShader', 'Mix Shader')
+    mixShader.inputs['Fac'].default_value = 0.8
+    mp.link(glossyBSDF, 'BSDF', mixShader, 1)
+    mp.link(diffuseBSDF, 'BSDF', mixShader, 2)
+    mp.link(mixShader, 'Shader', materialOutput, 'Surface')
 
     # create all the sides and the bottom of the case
     side = bpy.data.objects['side']
