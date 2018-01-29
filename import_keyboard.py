@@ -571,54 +571,55 @@ def read(filepath):
                     key["x2"] = key["x"] + key["x2"]
                     key["y2"] = key["y"] + key["y2"]
 
-                    if key["p"] == "DSA":
-                        TL = key["p"] + 'TLF'
-                        TM = key["p"] + 'TMF'
-                        TR = key["p"] + 'TRF'
+                    profile_norow = key["p"].replace("1","").replace("2","").replace("3","").replace("4","")
+                    if profile_norow in ["DSA", "SA"]:
+                        TL = profile_norow + 'TLF'
+                        TM = profile_norow + 'TMF'
+                        TR = profile_norow + 'TRF'
 
-                        ML = key["p"] + 'MLF'
-                        MM = key["p"] + 'MMF'
-                        MR = key["p"] + 'MRF'
+                        ML = profile_norow + 'MLF'
+                        MM = profile_norow + 'MMF'
+                        MR = profile_norow + 'MRF'
 
-                        BL = key["p"] + 'BLF'
-                        BM = key["p"] + 'BMF'
-                        BR = key["p"] + 'BRF'
+                        BL = profile_norow + 'BLF'
+                        BM = profile_norow + 'BMF'
+                        BR = profile_norow + 'BRF'
 
-                    if key["p"] == "DCS" and key["x2"] + key["w2"] > key["x"] + key["w"]:
-                        TR = key["p"] + 'TRF'
-                        MR = key["p"] + 'MRF'
-                        BR = key["p"] + 'BRF'
+                    if profile_norow == "DCS" and key["x2"] + key["w2"] > key["x"] + key["w"]:
+                        TR = profile_norow + 'TRF'
+                        MR = profile_norow + 'MRF'
+                        BR = profile_norow + 'BRF'
 
-                    if key["p"] == "DCS" and key["x2"] < key["x"]:
-                        TL = key["p"] + 'TLF'
-                        ML = key["p"] + 'MLF'
-                        BL = key["p"] + 'BLF'
+                    if profile_norow == "DCS" and key["x2"] < key["x"]:
+                        TL = profile_norow + 'TLF'
+                        ML = profile_norow + 'MLF'
+                        BL = profile_norow + 'BLF'
 
                     # check if key is "stepped"
                     if "l" in key and key["l"] is True:
-                        ETL = key["p"] + 'TLS'
-                        ETM = key["p"] + 'TMS'
-                        ETR = key["p"] + 'TRS'
+                        ETL = profile_norow + 'TLS'
+                        ETM = profile_norow + 'TMS'
+                        ETR = profile_norow + 'TRS'
 
-                        EML = key["p"] + 'MLS'
-                        EMM = key["p"] + 'MMS'
-                        EMR = key["p"] + 'MRS'
+                        EML = profile_norow + 'MLS'
+                        EMM = profile_norow + 'MMS'
+                        EMR = profile_norow + 'MRS'
 
-                        EBL = key["p"] + 'BLS'
-                        EBM = key["p"] + 'BMS'
-                        EBR = key["p"] + 'BRS'
+                        EBL = profile_norow + 'BLS'
+                        EBM = profile_norow + 'BMS'
+                        EBR = profile_norow + 'BRS'
                     else:
-                        ETL = key["p"] + 'TLF'
-                        ETM = key["p"] + 'TMF'
-                        ETR = key["p"] + 'TRF'
+                        ETL = profile_norow + 'TLF'
+                        ETM = profile_norow + 'TMF'
+                        ETR = profile_norow + 'TRF'
 
-                        EML = key["p"] + 'MLF'
-                        EMM = key["p"] + 'MMF'
-                        EMR = key["p"] + 'MRF'
+                        EML = profile_norow + 'MLF'
+                        EMM = profile_norow + 'MMF'
+                        EMR = profile_norow + 'MRF'
 
-                        EBL = key["p"] + 'BLF'
-                        EBM = key["p"] + 'BMF'
-                        EBR = key["p"] + 'BRF'
+                        EBL = profile_norow + 'BLF'
+                        EBM = profile_norow + 'BMF'
+                        EBR = profile_norow + 'BRF'
 
                     # add all the outcropping pieces
                     new_obj_enter_tl = bpy.data.objects[ETL].copy()
