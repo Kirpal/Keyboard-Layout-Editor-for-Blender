@@ -1021,9 +1021,16 @@ def read(filepath):
                         def alignLegendsProfile(p):
                             return {
                                 "DCS": [0.25, 0.15, 0.25, 0.325],
-                                "DSA": [0.2, 0.25, 0.2, 0.25]
+                                "DSA": [0.2, 0.25, 0.2, 0.25],
+                                "SA3D": [0.2, 0.30, 0.2, 0.30],
+                                "SA1": [0.2, 0.30, 0.2, 0.30],
+                                "SA2": [0.2, 0.30, 0.2, 0.30],
+                                "SA3": [0.2, 0.30, 0.2, 0.30],
+                                "SA4": [0.2, 0.30, 0.2, 0.30]
                             }.get(p, [0.25, 0.15, 0.25, 0.325])
 
+                        # the SA caps are thicker and we need to lift the label more
+                        cap_thickness = 0.001 if key["p"] in ["DCS", "DSA"] else 0.004
                         try:
                             # add text
                             new_label = bpy.data.curves.new(
@@ -1045,7 +1052,7 @@ def read(filepath):
                             new_label.data.align_y = alignText[pos][1]
 
                             new_label.location = [-1 * key["x"] - alignLegendsProfile(
-                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 0.8]
+                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 1]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1069,7 +1076,7 @@ def read(filepath):
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
 
-                            new_label.location[2] += 0.001
+                            new_label.location[2] += cap_thickness
                         except AttributeError:
                             # add text
                             new_label = bpy.data.curves.new(
@@ -1091,7 +1098,7 @@ def read(filepath):
                             new_label.data.align_y = alignText[pos][1]
 
                             new_label.location = [-1 * key["x"] - alignLegendsProfile(
-                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 0.8]
+                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 1]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1115,7 +1122,7 @@ def read(filepath):
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
 
-                            new_label.location[2] += 0.001
+                            new_label.location[2] += cap_thickness
 
                         # deselect everything
                         for obj in scn.objects:
