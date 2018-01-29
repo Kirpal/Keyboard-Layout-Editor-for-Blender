@@ -349,7 +349,7 @@ def getKey(filePath):
 
                         if "p" in rowData:
                             key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace(
-                                "5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
+                                "5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", ""). replace("space", "").replace(" ", "")
                         else:
                             key["p"] = "DCS"
 
