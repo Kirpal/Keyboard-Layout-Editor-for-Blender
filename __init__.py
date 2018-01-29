@@ -1,11 +1,11 @@
 # addon details
 bl_info = {
-    "name": "Import: KLE Raw JSON format (.json)",
-    "author": "/u/kdem007",
+    "name": "Import: KLE Raw JSON format -- wilder (.json)",
+    "author": "/u/kdem007 /u/jacopods",
     "version": (2, 0),
     "blender": (2, 78, 0),
-    "location": "File > Import-Export > Keyboard Layout Editor Raw(.json) ",
-    "description": "Import Keyboard Layouts",
+    "location": "File > Import-Export > Keyboard Layout Editor Raw TESTING (.json) ",
+    "description": "Import Keyboard Layouts -- wilder TESTING version",
     "warning": "",
     "category": "Import-Export",
 }
@@ -41,7 +41,7 @@ class JSONImporter(bpy.types.Operator):
 
 
 def menu_import(self, context):
-    self.layout.operator(JSONImporter.bl_idname, text="KLE Raw Data (.json)")
+    self.layout.operator(JSONImporter.bl_idname, text="KLE Raw Data --TESTING-- (.json)")
 
 # register addon
 
