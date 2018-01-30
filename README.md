@@ -3,7 +3,7 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 #### To-Do
 - [x] Add support for ISO enter
 - [x] Add key labels
-- [ ] Add more key profiles (DSA and DCS are done)
+- [x] Add more key profiles (DSA, SA and DCS are done)
 - [x] Add support for fonts (Google Fonts only)
 - [ ] Add support for glyphs
 - [x] Add legend alignment
@@ -35,7 +35,10 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 
 + To make the keycap legends backlit, make the legend color the same as whatever color you made the LEDs
 
+### Contributions
 
+Special thanks to [@zslane](https://deskthority.net/zslane-u8694/) on Deskthority for the SA models.
+Thanks to /u/jacopods for impolementing SA support and rendering examples
 
 
 ### Examples (outdated):
