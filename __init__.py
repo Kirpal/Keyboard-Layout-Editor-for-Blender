@@ -1,11 +1,11 @@
 # addon details
 bl_info = {
-    "name": "Import: KLE Raw JSON format -- wilder (.json)",
+    "name": "Import: KLE Raw JSON format (.json)",
     "author": "/u/kdem007 /u/jacopods",
-    "version": (2, 0),
+    "version": (2, 1),
     "blender": (2, 78, 0),
-    "location": "File > Import-Export > Keyboard Layout Editor Raw TESTING (.json) ",
-    "description": "Import Keyboard Layouts -- wilder TESTING version",
+    "location": "File > Import-Export > Keyboard Layout Editor Raw (.json) ",
+    "description": "Import Keyboard Layouts",
     "warning": "",
     "category": "Import-Export",
 }
