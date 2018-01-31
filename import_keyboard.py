@@ -281,6 +281,10 @@ def getKey(filePath):
                         else:
                             key["p"] = "DCS"
 
+                        # Normalize unsculpted SA profile to SA ROW 3
+                        if key["p"] = "SA":
+                            key["p"] = "SA3"
+
                         if key["p"] == "" or key["p"] not in ["DSA", "DCS", "SA1","SA2", "SA3", "SA4"]:
                             key["p"] = "DCS"
 
@@ -352,6 +356,10 @@ def getKey(filePath):
                                 "5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
                         else:
                             key["p"] = "DCS"
+
+                        # Normalize unsculpted SA profile to SA ROW 3
+                        if key["p"] = "SA":
+                            key["p"] = "SA3"
 
                         if key["p"] == "" or key["p"] not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4"]:
                             key["p"] = "DCS"
