@@ -358,7 +358,7 @@ def getKey(filePath):
                             key["p"] = "DCS"
 
                         # Normalize unsculpted SA profile to SA ROW 3
-                        if key["p"] = "SA":
+                        if key["p"] == "SA":
                             key["p"] = "SA3"
 
                         if key["p"] == "" or key["p"] not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4"]:
