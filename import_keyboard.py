@@ -42,9 +42,26 @@ fonts = [None for i in range(0, 12)]
 googleFonts = json.load(open(os.path.join(os.path.dirname(
     __file__), "fonts.json")))
 
+# Function to parse profiles
+fallbackProfile = "DCS"
+
+def parseProfile( profileString, homing):
+    ret = profileString.replace("R", "").replace("r", "").replace("0", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
+
+    # Normalize unsculpted SA profile to SA ROW 3
+    if ret == "SA":
+        ret = "SA3"
+
+    if ret == "" or ret not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4"]:
+        ret = fallbackProfile
+
+    # Set homing profile for supported profiles (currently only SA)
+    if homing and ret in ["SA1","SA2", "SA3", "SA4"]:
+        ret = "SA3D"
+
+    return ret
+
 # Function to parse legends
-
-
 def reorderLabels(labels, align):
     ret = ["", "", "", "", "", "", "", "", "", "", "", ""]
     for pos, label in enumerate(labels):
@@ -276,21 +293,10 @@ def getKey(filePath):
                             else:
                                 key["ry2"] = rowData["ry2"]
 
-                        if "p" in rowData:
-                            key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
+                        if "p" not in rowData:
+                            key["p"] = fallbackProfile
                         else:
-                            key["p"] = "DCS"
-
-                        # Normalize unsculpted SA profile to SA ROW 3
-                        if key["p"] == "SA":
-                            key["p"] = "SA3"
-
-                        if key["p"] == "" or key["p"] not in ["DSA", "DCS", "SA1","SA2", "SA3", "SA4"]:
-                            key["p"] = "DCS"
-
-                        # Use deep dish cap
-                        if "n" in key and key["p"] in ["SA1","SA2", "SA3", "SA4"]:
-                            key["p"] = "SA3D"
+                            key["p"] = parseProfile(rowData["p"], "n" in key)
 
                         # set the text on the key
                         key["v"] = {}
@@ -351,21 +357,10 @@ def getKey(filePath):
                             else:
                                 key["ry2"] = rowData["ry2"]
 
-                        if "p" in rowData:
-                            key["p"] = rowData["p"].replace("R", "").replace("r", "").replace("0", "").replace(
-                                "5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
+                        if "p" not in rowData:
+                            key["p"] = fallbackProfile
                         else:
-                            key["p"] = "DCS"
-
-                        # Normalize unsculpted SA profile to SA ROW 3
-                        if key["p"] == "SA":
-                            key["p"] = "SA3"
-
-                        if key["p"] == "" or key["p"] not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4"]:
-                            key["p"] = "DCS"
-
-                        if "n" in key and key["p"] in ["SA1","SA2", "SA3", "SA4"]:
-                            key["p"] = "SA3D"
+                            key["p"] = parseProfile(rowData["p"], "n" in key)
 
                         key["xCoord"] = 0
                         key["d"] = False
