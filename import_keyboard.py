@@ -1041,8 +1041,8 @@ def read(filepath):
                                 type="FONT", name="keylabel")
                             new_label = bpy.data.objects.new(
                                 "label", new_label)
-                            new_label.data.body = key[
-                                "v"]["labels"][pos].upper()
+                            label_text = HTMLParser().unescape(key["v"]["labels"][pos]).upper().replace("<BR>","\n")
+                            new_label.data.body = label_text
 
                             new_label.data.font = fonts[pos]
                             new_label.data.size = key["f"][pos] / 15
