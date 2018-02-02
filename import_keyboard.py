@@ -1016,8 +1016,7 @@ def read(filepath):
                         ]
 
                         # the SA caps are thicker and we need to lift the label more
-                        cap_thickness = 0.001 if key["p"] in [
-                            "DCS", "DSA"] else 0.004
+                        cap_thickness = 0.001 if key["p"] in ["DCS", "DSA"] else 0.008
                         try:
                             # add text
                             new_label = bpy.data.curves.new(
@@ -1041,7 +1040,7 @@ def read(filepath):
                             new_label.data.align_y = alignText[pos][1]
 
                             new_label.location = [-1 * key["x"] - alignLegendsProfile(
-                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 1]
+                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 2]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1058,6 +1057,13 @@ def read(filepath):
                             new_label.modifiers["Shrinkwrap"].offset = 0.0005
                             new_label.modifiers[
                                 "Shrinkwrap"].target = new_obj_tl
+                            new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
+                            new_label.modifiers[
+                                "Shrinkwrap"].use_project_z = True
+                            new_label.modifiers[
+                                "Shrinkwrap"].use_positive_direction = True
+                            new_label.modifiers[
+                                "Shrinkwrap"].use_negative_direction = True
                             new_label.to_mesh(scn, True, "PREVIEW")
                             if legendLed:
                                 new_label.active_material = bpy.data.materials["led: %s" %
@@ -1091,7 +1097,7 @@ def read(filepath):
                             new_label.data.align_y = alignText[pos][1]
 
                             new_label.location = [-1 * key["x"] - alignLegendsProfile(
-                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 1]
+                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 2]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1106,6 +1112,13 @@ def read(filepath):
 
                             bpy.ops.object.modifier_add(type='SHRINKWRAP')
                             new_label.modifiers["Shrinkwrap"].offset = 0.0005
+                            new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
+                            new_label.modifiers[
+                                "Shrinkwrap"].use_project_z = True
+                            new_label.modifiers[
+                                "Shrinkwrap"].use_positive_direction = True
+                            new_label.modifiers[
+                                "Shrinkwrap"].use_negative_direction = True
                             new_label.modifiers[
                                 "Shrinkwrap"].target = new_obj_tl
                             new_label.to_mesh(scn, True, "PREVIEW")
