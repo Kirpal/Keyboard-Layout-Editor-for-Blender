@@ -46,13 +46,16 @@ googleFonts = json.load(open(os.path.join(os.path.dirname(
 fallbackProfile = "DCS"
 
 def parseProfile( profileString, homing):
-    ret = profileString.replace("R", "").replace("r", "").replace("0", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace("SPACE", "").replace("space", "").replace(" ", "")
+    ret = profileString.upper().replace("R", "").replace("0", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace(" ", "")
+
+    if ret != "SASPACE":
+        ret = ret.replace("SPACE", "")
 
     # Normalize unsculpted SA profile to SA ROW 3
     if ret == "SA":
         ret = "SA3"
 
-    if ret == "" or ret not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4"]:
+    if ret == "" or ret not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4","SASPACE"]:
         ret = fallbackProfile
 
     # Set homing profile for supported profiles (currently only SA)
@@ -423,6 +426,7 @@ def read(filepath):
                       "SA3TL", "SA3TM", "SA3TR", "SA3ML", "SA3MM", "SA3MR", "SA3BL", "SA3BM", "SA3BR", # SA R3
                       "SA3DTL", "SA3DTM", "SA3DTR", "SA3DML", "SA3DMM", "SA3DMR", "SA3DBL", "SA3DBM", "SA3DBR", #deep dish
                       "SA4TL", "SA4TM", "SA4TR", "SA4ML", "SA4MM", "SA4MR", "SA4BL", "SA4BM", "SA4BR", # SA R4
+                      "SASPACETL", "SASPACETM", "SASPACETR", "SASPACEML", "SASPACEMM", "SASPACEMR", "SASPACEBL", "SASPACEBM", "SASPACEBR", # SA SPACE
                       "SATLF", "SATMF", "SATRF", "SAMLF", "SAMMF", "SAMRF", "SABLF", "SABMF", "SABRF", "SATLS", "SATMS", "SATRS", "SAMLS", "SAMMS", "SAMRS", "SABLS", "SABMS", "SABRS",
                       "side", "switch", "led"]
     # blender file with template objects
