@@ -87,12 +87,16 @@ def reorderSizes(default, individual, align):
     return ret
 
 
-def reorderColors(default, individual, align):
+def reorderColors(default, colors, align):
     ret = [default, default, default, default, default, default,
            default, default, default, default, default, default]
+
+    individual = colors.split('\n')
+
     if len(individual) > 1:
         for pos, color in enumerate(individual):
-            ret[labelMap[align][pos]] = color
+            if color is not None and color is not '':
+                ret[labelMap[align][pos]] = color
     else:
         ret = [individual[0], individual[0], individual[0], individual[0], individual[0], individual[
             0], individual[0], individual[0], individual[0], individual[0], individual[0], individual[0]]
@@ -307,7 +311,7 @@ def getKey(filePath):
                             value.split('\n'), align)
                         key["f"] = reorderSizes(key["f"], key["fa"], align)
                         key["t"] = reorderColors(
-                            None, key["t"].split('\n'), align)
+                            None, key["t"], align)
                         key["v"]["raw"] = value
 
                         # set the row and column of the key
@@ -376,7 +380,7 @@ def getKey(filePath):
                             value.split('\n'), align)
                         key["f"] = reorderSizes(key["f"], key["fa"], align)
                         key["t"] = reorderColors(
-                            None, key["t"].split('\n'), align)
+                            None, key["t"], align)
                         key["v"]["raw"] = value
 
                         # set the row and column of the key
@@ -507,7 +511,6 @@ def read(filepath):
                 # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
                 # 1)/#cccccc
                 if "c" in key:
-                    c = key["c"]
                     rgb = hex2rgb(key["c"])
                     diffuseBSDF.inputs["Color"].default_value = [
                         rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
@@ -932,13 +935,15 @@ def read(filepath):
                 for pos, label in enumerate(key["v"]["labels"]):
                     if label != "":
 
+                        print(label)
+
                         # new material for legend
                         m = Material()
                         m.set_cycles()
                         m.make_material("legend: %s-%s" %
                                         (key["row"], key["col"]))
 
-                        if "t" in key and key["t"][pos] != None and "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"]:
+                        if "t" in key and key["t"][pos] is not None and "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"]:
                             # make new emission node
                             emission = m.makeNode(
                                 'ShaderNodeEmission', 'Emission')
@@ -959,15 +964,13 @@ def read(filepath):
                             # if legend color is set convert hex to rgb and set diffuse color
                             # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
                             # 1)/#cccccc
-                            if "t" in key and key["t"][pos] != None:
+                            if "t" in key and key["t"][pos] is not None:
                                 if len(key["t"]) > 1:
-                                    c = key["t"][pos]
                                     rgb = hex2rgb(key["t"][pos])
                                     diffuseBSDF.inputs["Color"].default_value = [
                                         rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
                                 else:
-                                    c = key["t"][0]
-                                    rgb = hex2rgb(key["t"][pos])
+                                    rgb = hex2rgb(key["t"][0])
                                     diffuseBSDF.inputs["Color"].default_value = [
                                         rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
                             else:
