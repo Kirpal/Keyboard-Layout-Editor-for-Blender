@@ -446,61 +446,45 @@ def read(filepath):
     width = 0
     height = 0
 
+     # initialize font list with default font
+    fonts = [gotham for i in range(0, 12)]
     # get fonts from css
     if "css" in keyboard:
         selectors = []
         props = []
-        rules = []
-        css = keyboard["css"]
-        css = re.sub(r'(\@import [^;]+\;|\@font-face [^\}]+\})', "", css)
-        css = re.split(r'\{|\}', css)
+        css = re.sub(r'(\@import [^;]+\;|\@font-face [^\}]+\}|\/\*.*\*\/)', "", keyboard["css"])
+        css = re.findall(r'([^\{]*){([^\}]*)}', css)
+        css = [[i.strip() for i in pair] for pair in css]
 
-        css = filter(None, css)
+        for pair in css:
+            props = pair[1].split(";")
+            props = [i.strip() for i in props]
+            props = filter(None, props)
 
-        for idx, item in enumerate(css):
-            if idx % 2 == 0:
-                selectors.append(item)
+            selectors = filter(None, pair[0].split(","))
+
+            font = list(filter(lambda p: re.sub(r"\s+", "", p.split(":")[0]) == "font-family", props))[-1]
+            font = re.sub(r"(\'|\")", "", font.split(":")[1]).strip()
+
+            print(font)
+
+            if font in googleFonts.keys():
+                tempDir = bpy.app.tempdir
+                urllib.request.urlretrieve(
+                    googleFonts[font], os.path.join(tempDir, font + ".ttf"))
+                font = bpy.data.fonts.load(
+                    os.path.join(tempDir, font + ".ttf"))
+                
+                print(font)
             else:
-                props.append(item)
+                font = gotham
 
-        selectors = [re.split(r" |\,", i) for i in selectors]
-        selectors = [filter(None, i) for i in selectors]
-        selectors = [[re.sub(r"\s+", "", s) for s in sList]
-                     for sList in selectors]
-
-        props = [i.split(";") for i in props]
-
-        fontProps = [None for i in props]
-        for idx, propList in enumerate(props):
-            for prop in propList:
-                if re.sub(r"\s+", "", prop.split(":")[0]) == "font-family":
-                    fontProps[idx] = re.sub(r"\s+", "", prop.split(":")[1])
-            if fontProps[idx] == None:
-                selectors[idx] = None
-
-        for idx, selector in enumerate(selectors):
-            if selector is not None and fontProps[idx] is not None:
-                rules.append({"selectors": selector, "font": fontProps[idx]})
-
-        for rule in rules:
-            for selector in rule["selectors"]:
+            for selector in selectors:
                 if selector == "*":
-                    for labelSelector in range(0, 12):
-                        fonts[labelSelector] = rule["font"].replace(
-                            '"', "").replace("'", "")
-                elif int(selector.replace(".keylabel", "")) >= 0 and int(selector.replace(".keylabel", "")) <= 11:
+                    fonts = [font for i in range(0, 12)]
+                elif re.fullmatch(r".keylabel[0-9][1-2]?") and int(selector.replace(".keylabel", "")) >= 0 and int(selector.replace(".keylabel", "")) <= 11:
                     fonts[int(selector.replace(
-                        ".keylabel", ""))] = rule["font"].replace(
-                            '"', "").replace("'", "")
-    for pos, font in enumerate(fonts):
-        if font == None or font not in googleFonts.keys():
-            fonts[pos] = gotham
-        else:
-            tempDir = bpy.app.tempdir
-            urllib.request.urlretrieve(
-                googleFonts[font], os.path.join(tempDir, font + ".ttf"))
-            fonts[pos] = bpy.data.fonts.load(
-                os.path.join(tempDir, font + ".ttf"))
+                        ".keylabel", ""))] = font
 
     bpy.context.window_manager.progress_begin(keyboard["keyCount"], 0)
     bpy.context.window.cursor_set("DEFAULT")
