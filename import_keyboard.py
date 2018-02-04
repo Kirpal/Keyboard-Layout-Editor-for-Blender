@@ -1013,6 +1013,15 @@ def read(filepath):
                             m.link(mixShader, 'Shader',
                                    materialOutput, 'Surface')
 
+                        # This requires an explanation: Blender text vertival alignment accounts for line spacing, which is apparently set to ~1/.6
+                        # when aligning at top one
+                        legendVerticalCorrection = [
+                            0.6, 0.6, 0.6,
+                            0.8, 0.8, 0.8,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0
+                        ]
+
                         alignText = [
                             ["LEFT", "TOP"],
                             ["CENTER", "TOP"],
@@ -1030,11 +1039,11 @@ def read(filepath):
                             return {
                                 "DCS": [0.25, 0.15, 0.25, 0.325],
                                 "DSA": [0.2, 0.25, 0.2, 0.25],
-                                "SA1": [0.2, 0.15, 0.2, 0.15],
-                                "SA2": [0.2, 0.15, 0.2, 0.07],
-                                "SA3": [0.2, 0.15, 0.2, 0.01],
-                                "SA3D": [0.2, 0.15, 0.2, 0.01],
-                                "SA4": [0.2, 0.15, 0.2, 0.01]
+                                "SA1": [0.2, 0.18, 0.2, 0.07],
+                                "SA2": [0.2, 0.18, 0.2, 0.00],
+                                "SA3": [0.2, 0.18, 0.2, -0.07],
+                                "SA3D": [0.2, 0.18, 0.2, -0.07],
+                                "SA4": [0.2, 0.18, 0.2, -0.07]
                             }.get(p, [0.25, 0.15, 0.25, 0.325])
 
                         # the SA caps are thicker and we need to lift the label more
@@ -1054,8 +1063,9 @@ def read(filepath):
                                 0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
                             new_label.data.text_boxes[0].height = new_obj_tl.dimensions[
                                 1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
+
                             new_label.data.text_boxes[
-                                0].y = -1 * (key["f"][pos] / 15)
+                                0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
@@ -1101,7 +1111,7 @@ def read(filepath):
                             new_label.data.text_boxes[0].height = new_obj_tl.dimensions[
                                 1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
                             new_label.data.text_boxes[
-                                0].y = -1 * (key["f"][pos] / 15)
+                                0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
