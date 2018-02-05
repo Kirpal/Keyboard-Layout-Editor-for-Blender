@@ -45,8 +45,10 @@ googleFonts = json.load(open(os.path.join(os.path.dirname(
 # Function to parse profiles
 fallbackProfile = "DCS"
 
-def parseProfile( profileString, homing):
-    ret = profileString.upper().replace("R", "").replace("0", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").replace(" ", "")
+
+def parseProfile(profileString, homing):
+    ret = profileString.upper().replace("R", "").replace("0", "").replace("5", "").replace(
+        "6", "").replace("7", "").replace("8", "").replace("9", "").replace(" ", "")
 
     if ret != "SASPACE":
         ret = ret.replace("SPACE", "")
@@ -55,16 +57,18 @@ def parseProfile( profileString, homing):
     if ret == "SA":
         ret = "SA3"
 
-    if ret == "" or ret not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4","SASPACE"]:
+    if ret == "" or ret not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4", "SASPACE"]:
         ret = fallbackProfile
 
     # Set homing profile for supported profiles (currently only SA)
-    if homing and ret in ["SA1","SA2", "SA3", "SA4"]:
+    if homing and ret in ["SA1", "SA2", "SA3", "SA4"]:
         ret = "SA3D"
 
     return ret
 
 # Function to parse legends
+
+
 def reorderLabels(labels, align):
     ret = ["", "", "", "", "", "", "", "", "", "", "", ""]
     for pos, label in enumerate(labels):
@@ -427,12 +431,12 @@ def read(filepath):
 
     defaultObjects = ["DCSTL", "DCSTM", "DCSTR", "DCSML", "DCSMM", "DCSMR", "DCSBL", "DCSBM", "DCSBR", "DCSTLF", "DCSTMF", "DCSTRF", "DCSMLF", "DCSMMF", "DCSMRF", "DCSBLF", "DCSBMF", "DCSBRF", "DCSTLS", "DCSTMS", "DCSTRS", "DCSMLS", "DCSMMS", "DCSMRS", "DCSBLS", "DCSBMS", "DCSBRS",
                       "DSATL", "DSATM", "DSATR", "DSAML", "DSAMM", "DSAMR", "DSABL", "DSABM", "DSABR", "DSATLF", "DSATMF", "DSATRF", "DSAMLF", "DSAMMF", "DSAMRF", "DSABLF", "DSABMF", "DSABRF", "DSATLS", "DSATMS", "DSATRS", "DSAMLS", "DSAMMS", "DSAMRS", "DSABLS", "DSABMS", "DSABRS",
-                      "SA1TL", "SA1TM", "SA1TR", "SA1ML", "SA1MM", "SA1MR", "SA1BL", "SA1BM", "SA1BR", # SA R1
-                      "SA2TL", "SA2TM", "SA2TR", "SA2ML", "SA2MM", "SA2MR", "SA2BL", "SA2BM", "SA2BR", # SA R2
-                      "SA3TL", "SA3TM", "SA3TR", "SA3ML", "SA3MM", "SA3MR", "SA3BL", "SA3BM", "SA3BR", # SA R3
-                      "SA3DTL", "SA3DTM", "SA3DTR", "SA3DML", "SA3DMM", "SA3DMR", "SA3DBL", "SA3DBM", "SA3DBR", #deep dish
-                      "SA4TL", "SA4TM", "SA4TR", "SA4ML", "SA4MM", "SA4MR", "SA4BL", "SA4BM", "SA4BR", # SA R4
-                      "SASPACETL", "SASPACETM", "SASPACETR", "SASPACEML", "SASPACEMM", "SASPACEMR", "SASPACEBL", "SASPACEBM", "SASPACEBR", # SA SPACE
+                      "SA1TL", "SA1TM", "SA1TR", "SA1ML", "SA1MM", "SA1MR", "SA1BL", "SA1BM", "SA1BR",  # SA R1
+                      "SA2TL", "SA2TM", "SA2TR", "SA2ML", "SA2MM", "SA2MR", "SA2BL", "SA2BM", "SA2BR",  # SA R2
+                      "SA3TL", "SA3TM", "SA3TR", "SA3ML", "SA3MM", "SA3MR", "SA3BL", "SA3BM", "SA3BR",  # SA R3
+                      "SA3DTL", "SA3DTM", "SA3DTR", "SA3DML", "SA3DMM", "SA3DMR", "SA3DBL", "SA3DBM", "SA3DBR",  # deep dish
+                      "SA4TL", "SA4TM", "SA4TR", "SA4ML", "SA4MM", "SA4MR", "SA4BL", "SA4BM", "SA4BR",  # SA R4
+                      "SASPACETL", "SASPACETM", "SASPACETR", "SASPACEML", "SASPACEMM", "SASPACEMR", "SASPACEBL", "SASPACEBM", "SASPACEBR",  # SA SPACE
                       "SATLF", "SATMF", "SATRF", "SAMLF", "SAMMF", "SAMRF", "SABLF", "SABMF", "SABRF", "SATLS", "SATMS", "SATRS", "SAMLS", "SAMMS", "SAMRS", "SABLS", "SABMS", "SABRS",
                       "side", "switch", "led"]
     # blender file with template objects
@@ -452,13 +456,14 @@ def read(filepath):
     width = 0
     height = 0
 
-     # initialize font list with default font
+    # initialize font list with default font
     fonts = [gotham for i in range(0, 12)]
     # get fonts from css
     if "css" in keyboard:
         selectors = []
         props = []
-        css = re.sub(r'(\@import [^;]+\;|\@font-face [^\}]+\}|\/\*.*\*\/)', "", keyboard["css"])
+        css = re.sub(
+            r'(\@import [^;]+\;|\@font-face [^\}]+\}|\/\*.*\*\/)', "", keyboard["css"])
         css = re.findall(r'([^\{]*){([^\}]*)}', css)
         css = [[i.strip() for i in pair] for pair in css]
 
@@ -469,10 +474,9 @@ def read(filepath):
 
             selectors = filter(None, pair[0].split(","))
 
-            font = list(filter(lambda p: re.sub(r"\s+", "", p.split(":")[0]) == "font-family", props))[-1]
+            font = list(filter(lambda p: re.sub(
+                r"\s+", "", p.split(":")[0]) == "font-family", props))[-1]
             font = re.sub(r"(\'|\")", "", font.split(":")[1]).strip()
-
-            print(font)
 
             if font in googleFonts.keys():
                 tempDir = bpy.app.tempdir
@@ -480,8 +484,7 @@ def read(filepath):
                     googleFonts[font], os.path.join(tempDir, font + ".ttf"))
                 font = bpy.data.fonts.load(
                     os.path.join(tempDir, font + ".ttf"))
-                
-                print(font)
+
             else:
                 font = gotham
 
@@ -508,14 +511,12 @@ def read(filepath):
             "SA4": [0.2, 0.18, 0.2, -0.07]
         }.get(p, [0.25, 0.15, 0.25, 0.325])
 
-
     # iterate over rows in keyboard
     for row in keyboard["rows"]:
         # iterate over keys in row
         for key in row:
             if key["d"] is False:
                 if key["c"] not in bpy.data.materials:
-                    print("making %s" % key["c"])
                     # new material for key
                     m = Material()
                     m.set_cycles()
@@ -532,7 +533,8 @@ def read(filepath):
                     # add material output node
                     materialOutput = m.nodes['Material Output']
                     # add glossy node
-                    glossyBSDF = m.makeNode('ShaderNodeBsdfGlossy', 'Glossy BSDF')
+                    glossyBSDF = m.makeNode(
+                        'ShaderNodeBsdfGlossy', 'Glossy BSDF')
                     # set glossy node color to white and roughness to 0.3
                     glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
                     glossyBSDF.inputs["Roughness"].default_value = 0.3
@@ -576,7 +578,8 @@ def read(filepath):
                     key["x2"] = key["x"] + key["x2"]
                     key["y2"] = key["y"] + key["y2"]
 
-                    profile_norow = key["p"].replace("1","").replace("2","").replace("3","").replace("4","")
+                    profile_norow = key["p"].replace("1", "").replace(
+                        "2", "").replace("3", "").replace("4", "")
                     if profile_norow in ["DSA", "SA"]:
                         TL = profile_norow + 'TLF'
                         TM = profile_norow + 'TMF'
@@ -764,7 +767,7 @@ def read(filepath):
                     middlew_needed = False
 
                 # define overlap
-                overlap = 0.2 if key["p"] in [ "DCS", "DSA" ] else 0.0
+                overlap = 0.2 if key["p"] in ["DCS", "DSA"] else 0.0
 
                 # add all the key pieces
                 new_obj_tl = bpy.data.objects[TL].copy()
@@ -780,7 +783,7 @@ def read(filepath):
                     new_obj_tm.location[0] = (key["x"] + key["w"] / 2) * -1
                     new_obj_tm.location[1] = key["y"] + 0.5
                     new_obj_tm.dimensions[0] = key["w"] - 1 + \
-                                               overlap if key["w"] - 1 + overlap > 0 else overlap
+                        overlap if key["w"] - 1 + overlap > 0 else overlap
 
                 new_obj_tr = bpy.data.objects[TR].copy()
                 new_obj_tr.data = bpy.data.objects[TR].data.copy()
@@ -793,7 +796,8 @@ def read(filepath):
                     new_obj_ml.data = bpy.data.objects[ML].data.copy()
                     new_obj_ml.animation_data_clear()
                     new_obj_ml.location[0] = key["x"] * -1 - 0.5
-                    new_obj_ml.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
+                    new_obj_ml.location[1] = key["y"] + \
+                        0.5 + (key["h"] - 1) / 2
                     new_obj_ml.dimensions[1] = key["h"] - 1 + overlap
 
                     if middlew_needed:
@@ -801,14 +805,18 @@ def read(filepath):
                         new_obj_mm.data = bpy.data.objects[MM].data.copy()
                         new_obj_mm.animation_data_clear()
                         new_obj_mm.location[0] = (key["x"] + key["w"] / 2) * -1
-                        new_obj_mm.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
-                        new_obj_mm.dimensions = (key["w"] - 1 + overlap if key["w"] - 1 + overlap > 0 else overlap, key["h"] - 1 + overlap, new_obj_mm.dimensions[2])
+                        new_obj_mm.location[1] = key["y"] + \
+                            0.5 + (key["h"] - 1) / 2
+                        new_obj_mm.dimensions = (key["w"] - 1 + overlap if key["w"] - 1 + overlap >
+                                                 0 else overlap, key["h"] - 1 + overlap, new_obj_mm.dimensions[2])
 
                     new_obj_mr = bpy.data.objects[MR].copy()
                     new_obj_mr.data = bpy.data.objects[MR].data.copy()
                     new_obj_mr.animation_data_clear()
-                    new_obj_mr.location[0] = (key["x"]) * -1 - 0.5 - (key["w"] - 1)
-                    new_obj_mr.location[1] = key["y"] + 0.5 + (key["h"] - 1) / 2
+                    new_obj_mr.location[0] = (
+                        key["x"]) * -1 - 0.5 - (key["w"] - 1)
+                    new_obj_mr.location[1] = key["y"] + \
+                        0.5 + (key["h"] - 1) / 2
                     new_obj_mr.dimensions[1] = key["h"] - 1 + overlap
 
                 new_obj_bl = bpy.data.objects[BL].copy()
@@ -825,7 +833,7 @@ def read(filepath):
                         key["x"]) * -1 - 0.5 - (key["w"] - 1) / 2
                     new_obj_bm.location[1] = key["y"] + 0.5 + key["h"] - 1
                     new_obj_bm.dimensions[0] = key["w"] - 1 + \
-                                               overlap if key["w"] - 1 + overlap > 0 else overlap
+                        overlap if key["w"] - 1 + overlap > 0 else overlap
 
                 new_obj_br = bpy.data.objects[BR].copy()
                 new_obj_br.data = bpy.data.objects[BR].data.copy()
@@ -928,11 +936,9 @@ def read(filepath):
                 for pos, label in enumerate(key["v"]["labels"]):
                     legendLed = False
                     if label != "":
-                        print(keyboard["led"])
                         if "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"][:3]:
                             legendLed = True
                             if "led: %s" % key["t"][pos] not in bpy.data.materials:
-                                print("material: %s" % key["t"][pos])
                                 # new material for legend
                                 m = Material()
                                 m.set_cycles()
@@ -950,9 +956,8 @@ def read(filepath):
                                 materialOutput = m.nodes['Material Output']
                                 # attach emission to material output
                                 m.link(emission, 'Emission',
-                                    materialOutput, 'Surface')
+                                       materialOutput, 'Surface')
                         elif key["t"][pos] not in bpy.data.materials:
-                            print("material: %s" % key["t"][pos])
                             # new material for legend
                             m = Material()
                             m.set_cycles()
@@ -985,7 +990,7 @@ def read(filepath):
                             m.link(glossyBSDF, 'BSDF', mixShader, 1)
                             m.link(diffuseBSDF, 'BSDF', mixShader, 2)
                             m.link(mixShader, 'Shader',
-                                materialOutput, 'Surface')
+                                   materialOutput, 'Surface')
 
                         # This requires an explanation: Blender text vertival alignment accounts for line spacing, which is apparently set to ~1/.6
                         # when aligning at top one
@@ -1009,14 +1014,16 @@ def read(filepath):
                         ]
 
                         # the SA caps are thicker and we need to lift the label more
-                        cap_thickness = 0.001 if key["p"] in ["DCS", "DSA"] else 0.004
+                        cap_thickness = 0.001 if key["p"] in [
+                            "DCS", "DSA"] else 0.004
                         try:
                             # add text
                             new_label = bpy.data.curves.new(
                                 type="FONT", name="keylabel")
                             new_label = bpy.data.objects.new(
                                 "label", new_label)
-                            label_text = HTMLParser().unescape(key["v"]["labels"][pos]).upper().replace("<BR>","\n")
+                            label_text = HTMLParser().unescape(
+                                key["v"]["labels"][pos]).upper().replace("<BR>", "\n")
                             new_label.data.body = label_text
 
                             new_label.data.font = fonts[pos]
@@ -1051,10 +1058,11 @@ def read(filepath):
                                 "Shrinkwrap"].target = new_obj_tl
                             new_label.to_mesh(scn, True, "PREVIEW")
                             if legendLed:
-                                new_label.active_material = bpy.data.materials["led: %s" % key["t"][pos]]
+                                new_label.active_material = bpy.data.materials["led: %s" %
+                                                                               key["t"][pos]]
                             else:
                                 new_label.active_material = bpy.data.materials[key["t"][pos]]
-                            
+
                             bpy.ops.object.convert(target='MESH')
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
