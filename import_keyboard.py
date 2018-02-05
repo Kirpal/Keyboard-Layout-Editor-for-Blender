@@ -334,6 +334,8 @@ def getKey(filePath):
                         # if rowData has property set then add it to key
                         if "c" in rowData:
                             key["c"] = rowData["c"]
+                        else:
+                            key["c"] = "#cccccc"
                         if "t" in rowData:
                             key["t"] = rowData["t"]
                         else:
@@ -494,46 +496,55 @@ def read(filepath):
     bpy.context.window.cursor_set("DEFAULT")
     currentKey = 0
 
+# adjust legends based on keycap type
+    def alignLegendsProfile(p):
+        return {
+            "DCS": [0.25, 0.15, 0.25, 0.325],
+            "DSA": [0.2, 0.25, 0.2, 0.25],
+            "SA1": [0.2, 0.18, 0.2, 0.07],
+            "SA2": [0.2, 0.18, 0.2, 0.00],
+            "SA3": [0.2, 0.18, 0.2, -0.07],
+            "SA3D": [0.2, 0.18, 0.2, -0.07],
+            "SA4": [0.2, 0.18, 0.2, -0.07]
+        }.get(p, [0.25, 0.15, 0.25, 0.325])
+
+
     # iterate over rows in keyboard
     for row in keyboard["rows"]:
         # iterate over keys in row
         for key in row:
             if key["d"] is False:
-                # new material for key
-                m = Material()
-                m.set_cycles()
-                m.make_material("%s-%s" % (key["row"], key["col"]))
+                if key["c"] not in bpy.data.materials:
+                    print("making %s" % key["c"])
+                    # new material for key
+                    m = Material()
+                    m.set_cycles()
+                    m.make_material(key["c"])
 
-                # make new diffuse node
-                diffuseBSDF = m.nodes['Diffuse BSDF']
+                    # make new diffuse node
+                    diffuseBSDF = m.nodes['Diffuse BSDF']
 
-                # if key color is set convert hex to rgb and set diffuse color
-                # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
-                # 1)/#cccccc
-                if "c" in key:
+                    # convert key color to rgb and set material to that
                     rgb = hex2rgb(key["c"])
                     diffuseBSDF.inputs["Color"].default_value = [
                         rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
-                else:
-                    diffuseBSDF.inputs["Color"].default_value = [
-                        0.8, 0.8, 0.8, 1]
 
-                # add material output node
-                materialOutput = m.nodes['Material Output']
-                # add glossy node
-                glossyBSDF = m.makeNode('ShaderNodeBsdfGlossy', 'Glossy BSDF')
-                # set glossy node color to white and roughness to 0.3
-                glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
-                glossyBSDF.inputs["Roughness"].default_value = 0.3
-                # add mix node
-                mixShader = m.makeNode('ShaderNodeMixShader', 'Mix Shader')
-                # set mix node factor to 0.8
-                mixShader.inputs['Fac'].default_value = 0.8
-                # connect glossy and diffuse nodes to the mix node, and connect
-                # that to the material output
-                m.link(glossyBSDF, 'BSDF', mixShader, 1)
-                m.link(diffuseBSDF, 'BSDF', mixShader, 2)
-                m.link(mixShader, 'Shader', materialOutput, 'Surface')
+                    # add material output node
+                    materialOutput = m.nodes['Material Output']
+                    # add glossy node
+                    glossyBSDF = m.makeNode('ShaderNodeBsdfGlossy', 'Glossy BSDF')
+                    # set glossy node color to white and roughness to 0.3
+                    glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
+                    glossyBSDF.inputs["Roughness"].default_value = 0.3
+                    # add mix node
+                    mixShader = m.makeNode('ShaderNodeMixShader', 'Mix Shader')
+                    # set mix node factor to 0.8
+                    mixShader.inputs['Fac'].default_value = 0.8
+                    # connect glossy and diffuse nodes to the mix node, and connect
+                    # that to the material output
+                    m.link(glossyBSDF, 'BSDF', mixShader, 1)
+                    m.link(diffuseBSDF, 'BSDF', mixShader, 2)
+                    m.link(mixShader, 'Shader', materialOutput, 'Surface')
 
                 new_obj_enter_mm = None
 
@@ -692,24 +703,15 @@ def read(filepath):
 
                     # set outcropping material to the material that was just
                     # created
-                    new_obj_enter_tl.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_tm.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_tr.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_ml.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_mm.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_mr.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_bl.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_bm.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                    new_obj_enter_br.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
+                    new_obj_enter_tl.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_tm.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_tr.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_ml.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_mm.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_mr.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_bl.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_bm.active_material = bpy.data.materials[key["c"]]
+                    new_obj_enter_br.active_material = bpy.data.materials[key["c"]]
 
                     # add outcropping to scene
                     scn.objects.link(new_obj_enter_tl)
@@ -832,30 +834,21 @@ def read(filepath):
                 new_obj_br.location[1] = key["y"] + 0.5 + key["h"] - 1
 
                 # set key material to the material that was just created
-                new_obj_tl.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
+                new_obj_tl.active_material = bpy.data.materials[key["c"]]
                 if middlew_needed:
-                    new_obj_tm.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                new_obj_tr.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
+                    new_obj_tm.active_material = bpy.data.materials[key["c"]]
+                new_obj_tr.active_material = bpy.data.materials[key["c"]]
 
                 if middleh_needed:
-                    new_obj_ml.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
+                    new_obj_ml.active_material = bpy.data.materials[key["c"]]
                     if middlew_needed:
-                        new_obj_mm.active_material = bpy.data.materials[
-                            "%s-%s" % (key["row"], key["col"])]
-                    new_obj_mr.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
+                        new_obj_mm.active_material = bpy.data.materials[key["c"]]
+                    new_obj_mr.active_material = bpy.data.materials[key["c"]]
 
-                new_obj_bl.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
+                new_obj_bl.active_material = bpy.data.materials[key["c"]]
                 if middlew_needed:
-                    new_obj_bm.active_material = bpy.data.materials[
-                        "%s-%s" % (key["row"], key["col"])]
-                new_obj_br.active_material = bpy.data.materials[
-                    "%s-%s" % (key["row"], key["col"])]
+                    new_obj_bm.active_material = bpy.data.materials[key["c"]]
+                new_obj_br.active_material = bpy.data.materials[key["c"]]
 
                 # add key to scene
                 scn.objects.link(new_obj_tl)
@@ -933,49 +926,43 @@ def read(filepath):
                     new_led.name = "led: %s-%s" % (key["row"], key["col"])
 
                 for pos, label in enumerate(key["v"]["labels"]):
+                    legendLed = False
                     if label != "":
+                        print(keyboard["led"])
+                        if "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"][:3]:
+                            legendLed = True
+                            if "led: %s" % key["t"][pos] not in bpy.data.materials:
+                                print("material: %s" % key["t"][pos])
+                                # new material for legend
+                                m = Material()
+                                m.set_cycles()
+                                m.make_material("led: %s" % key["t"][pos])
+                                # make new emission node
+                                emission = m.makeNode(
+                                    'ShaderNodeEmission', 'Emission')
+                                # set legend color
+                                emission.inputs["Color"].default_value = [
+                                    keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
+                                emission.inputs[
+                                    "Strength"].default_value = keyboard["led"][3] * 5
 
-                        print(label)
-
-                        # new material for legend
-                        m = Material()
-                        m.set_cycles()
-                        m.make_material("legend: %s-%s" %
-                                        (key["row"], key["col"]))
-
-                        if "t" in key and key["t"][pos] is not None and "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"]:
-                            # make new emission node
-                            emission = m.makeNode(
-                                'ShaderNodeEmission', 'Emission')
-                            # set legend color
-                            emission.inputs["Color"].default_value = [
-                                keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
-                            emission.inputs[
-                                "Strength"].default_value = keyboard["led"][3] * 5
-
-                            # add material output node
-                            materialOutput = m.nodes['Material Output']
-                            # attach emission to material output
-                            m.link(emission, 'Emission',
-                                   materialOutput, 'Surface')
-                        else:
+                                # add material output node
+                                materialOutput = m.nodes['Material Output']
+                                # attach emission to material output
+                                m.link(emission, 'Emission',
+                                    materialOutput, 'Surface')
+                        elif key["t"][pos] not in bpy.data.materials:
+                            print("material: %s" % key["t"][pos])
+                            # new material for legend
+                            m = Material()
+                            m.set_cycles()
+                            m.make_material(key["t"][pos])
                             # make new diffuse node
                             diffuseBSDF = m.nodes['Diffuse BSDF']
-                            # if legend color is set convert hex to rgb and set diffuse color
-                            # to that value, otherwise set it to rgba(0.8, 0.8, 0.8,
-                            # 1)/#cccccc
-                            if "t" in key and key["t"][pos] is not None:
-                                if len(key["t"]) > 1:
-                                    rgb = hex2rgb(key["t"][pos])
-                                    diffuseBSDF.inputs["Color"].default_value = [
-                                        rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
-                                else:
-                                    rgb = hex2rgb(key["t"][0])
-                                    diffuseBSDF.inputs["Color"].default_value = [
-                                        rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
-                            else:
-                                diffuseBSDF.inputs["Color"].default_value = [
-                                    0, 0, 0, 1]
+                            # convert hex to rgb
+                            rgb = hex2rgb(key["t"][pos])
+                            diffuseBSDF.inputs["Color"].default_value = [
+                                rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
 
                             # add material output node
                             materialOutput = m.nodes['Material Output']
@@ -998,7 +985,7 @@ def read(filepath):
                             m.link(glossyBSDF, 'BSDF', mixShader, 1)
                             m.link(diffuseBSDF, 'BSDF', mixShader, 2)
                             m.link(mixShader, 'Shader',
-                                   materialOutput, 'Surface')
+                                materialOutput, 'Surface')
 
                         # This requires an explanation: Blender text vertival alignment accounts for line spacing, which is apparently set to ~1/.6
                         # when aligning at top one
@@ -1020,18 +1007,6 @@ def read(filepath):
                             ["CENTER", "BOTTOM"],
                             ["RIGHT", "BOTTOM"]
                         ]
-
-                        # adjust legends based on keycap type
-                        def alignLegendsProfile(p):
-                            return {
-                                "DCS": [0.25, 0.15, 0.25, 0.325],
-                                "DSA": [0.2, 0.25, 0.2, 0.25],
-                                "SA1": [0.2, 0.18, 0.2, 0.07],
-                                "SA2": [0.2, 0.18, 0.2, 0.00],
-                                "SA3": [0.2, 0.18, 0.2, -0.07],
-                                "SA3D": [0.2, 0.18, 0.2, -0.07],
-                                "SA4": [0.2, 0.18, 0.2, -0.07]
-                            }.get(p, [0.25, 0.15, 0.25, 0.325])
 
                         # the SA caps are thicker and we need to lift the label more
                         cap_thickness = 0.001 if key["p"] in ["DCS", "DSA"] else 0.004
@@ -1075,8 +1050,11 @@ def read(filepath):
                             new_label.modifiers[
                                 "Shrinkwrap"].target = new_obj_tl
                             new_label.to_mesh(scn, True, "PREVIEW")
-                            new_label.active_material = bpy.data.materials[
-                                "legend: %s-%s" % (key["row"], key["col"])]
+                            if legendLed:
+                                new_label.active_material = bpy.data.materials["led: %s" % key["t"][pos]]
+                            else:
+                                new_label.active_material = bpy.data.materials[key["t"][pos]]
+                            
                             bpy.ops.object.convert(target='MESH')
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
