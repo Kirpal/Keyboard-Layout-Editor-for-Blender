@@ -1029,18 +1029,24 @@ def read(filepath):
 
                             new_label.data.font = fonts[pos]
                             new_label.data.size = key["f"][pos] / 15
-                            new_label.data.text_boxes[0].width = new_obj_tl.dimensions[
-                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
-                            new_label.data.text_boxes[0].height = new_obj_tl.dimensions[
-                                1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
 
-                            new_label.data.text_boxes[
-                                0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
+                            # Here are some computations for the clipping boxes
+                            boxTop = key["y"] + alignLegendsProfile(key["p"])[1]
+                            boxLeft = -1 * key["x"] - alignLegendsProfile(key["p"])[0]
+
+                            boxHeight = new_obj_tl.dimensions[
+                                1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
+                            boxWidth = new_obj_tl.dimensions[
+                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+
+                            new_label.data.text_boxes[0].width = boxWidth
+                            new_label.data.text_boxes[0].height = boxHeight
+
+                            new_label.data.text_boxes[0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
-                            new_label.location = [-1 * key["x"] - alignLegendsProfile(
-                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 2]
+                            new_label.location = [boxLeft,boxTop,2]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1050,13 +1056,18 @@ def read(filepath):
                             for obj in scn.objects:
                                 obj.select = False
 
+                            # create clipping cube
+                            bpy.ops.mesh.primitive_cube_add(location=(boxLeft-boxWidth*0.5,boxTop+boxHeight*0.5,1))
+                            cube = bpy.context.object
+                            cube.scale[0] = 0.5*boxWidth
+                            cube.scale[1] = 0.5*boxHeight
+                            cube.name = 'clipCube'
+
                             new_label.select = True
                             scn.objects.active = new_label
 
                             bpy.ops.object.modifier_add(type='SHRINKWRAP')
                             new_label.modifiers["Shrinkwrap"].offset = 0.0005
-                            new_label.modifiers[
-                                "Shrinkwrap"].target = new_obj_tl
                             new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
                             new_label.modifiers[
                                 "Shrinkwrap"].use_project_z = True
@@ -1064,6 +1075,8 @@ def read(filepath):
                                 "Shrinkwrap"].use_positive_direction = True
                             new_label.modifiers[
                                 "Shrinkwrap"].use_negative_direction = True
+                            new_label.modifiers[
+                                "Shrinkwrap"].target = new_obj_tl
                             new_label.to_mesh(scn, True, "PREVIEW")
                             if legendLed:
                                 new_label.active_material = bpy.data.materials["led: %s" %
@@ -1072,6 +1085,13 @@ def read(filepath):
                                 new_label.active_material = bpy.data.materials[key["t"][pos]]
 
                             bpy.ops.object.convert(target='MESH')
+
+                            bpy.ops.object.modifier_add(type='BOOLEAN')
+                            bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
+                            bpy.context.object.modifiers["Boolean"].object = cube
+                            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
+                            bpy.data.objects.remove(cube,True)
+
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
 
@@ -1087,17 +1107,24 @@ def read(filepath):
 
                             new_label.data.font = noto
                             new_label.data.size = key["f"][pos] / 15
-                            new_label.data.text_boxes[0].width = new_obj_tl.dimensions[
-                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
-                            new_label.data.text_boxes[0].height = new_obj_tl.dimensions[
+
+                            # Here are some computations for the clipping boxes
+                            boxTop = key["y"] + alignLegendsProfile(key["p"])[1]
+                            boxLeft = -1 * key["x"] - alignLegendsProfile(key["p"])[0]
+
+                            boxHeight = new_obj_tl.dimensions[
                                 1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
-                            new_label.data.text_boxes[
-                                0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
+                            boxWidth = new_obj_tl.dimensions[
+                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+
+                            new_label.data.text_boxes[0].width = boxWidth
+                            new_label.data.text_boxes[0].height = boxHeight
+
+                            new_label.data.text_boxes[0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
-                            new_label.location = [-1 * key["x"] - alignLegendsProfile(
-                                key["p"])[0], key["y"] + alignLegendsProfile(key["p"])[1], 2]
+                            new_label.location = [boxLeft,boxTop,2]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1106,6 +1133,13 @@ def read(filepath):
                             # deselect everything
                             for obj in scn.objects:
                                 obj.select = False
+
+                            # create clipping cube
+                            bpy.ops.mesh.primitive_cube_add(location=(boxLeft-boxWidth*0.5,boxTop+boxHeight*0.5,1))
+                            cube = bpy.context.object
+                            cube.scale[0] = 0.5*boxWidth
+                            cube.scale[1] = 0.5*boxHeight
+                            cube.name = 'clipCube'
 
                             new_label.select = True
                             scn.objects.active = new_label
@@ -1125,6 +1159,13 @@ def read(filepath):
                             new_label.active_material = bpy.data.materials[
                                 "legend: %s-%s" % (key["row"], key["col"])]
                             bpy.ops.object.convert(target='MESH')
+
+                            bpy.ops.object.modifier_add(type='BOOLEAN')
+                            bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
+                            bpy.context.object.modifiers["Boolean"].object = cube
+                            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
+                            bpy.data.objects.remove(cube,True)
+
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
 
