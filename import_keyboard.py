@@ -1034,13 +1034,15 @@ def read(filepath):
                             boxTop = key["y"] + alignLegendsProfile(key["p"])[1]
                             boxLeft = -1 * key["x"] - alignLegendsProfile(key["p"])[0]
 
+                            label_verticalCorrection = -0.1 if label_text in [",", ";", ".", "[", "]" ] else 0;
+
                             boxHeight = new_obj_tl.dimensions[
                                 1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
                             boxWidth = new_obj_tl.dimensions[
                                 0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
 
                             new_label.data.text_boxes[0].width = boxWidth
-                            new_label.data.text_boxes[0].height = boxHeight
+                            new_label.data.text_boxes[0].height = boxHeight  + label_verticalCorrection * new_label.data.size
 
                             new_label.data.text_boxes[0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
                             new_label.data.align_x = alignText[pos][0]
