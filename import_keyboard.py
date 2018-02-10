@@ -273,6 +273,8 @@ def getKey(filePath):
                         # if rowData has property set then add it to key
                         if "c" in rowData:
                             key["c"] = rowData["c"]
+                        else:
+                            key["c"] = "#cccccc"
                         if "t" in rowData:
                             key["t"] = rowData["t"]
                         else:
