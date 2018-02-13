@@ -456,6 +456,12 @@ def read(filepath):
     scn = bpy.context.scene
     scn.display_settings.display_device = "None"
 
+    bpy.ops.group.create(name="Keyboard")
+
+    keyboard_empty = bpy.data.objects.new("Keyboard_whole", None)
+    keyboard_empty.location = (0,0,0)
+    scn.objects.link(keyboard_empty)
+
     # set width and height of keyboard
     width = 0
     height = 0
@@ -1224,6 +1230,16 @@ def read(filepath):
                     empty.select = True
                     bpy.ops.object.delete(use_global=False)
 
+                new_obj_tl.select = True
+                new_switch.select = True
+
+                scn.objects.active = keyboard_empty
+                bpy.ops.object.parent_set(type="OBJECT")
+
+                # deselect everything
+                for obj in scn.objects:
+                    obj.select = False
+
                 # set the keyboard width and height if it was smaller than the
                 # current width
                 if key["x"] + key["w"] + 0.05 > width:
@@ -1330,9 +1346,24 @@ def read(filepath):
     bpy.ops.object.join()
     # name the case
     side5.name = "Case"
+
+    scn.objects.active = keyboard_empty
+    bpy.ops.object.parent_set(type="OBJECT")
+
+    # This assumes 1 blender unit = 10cm
+    blender_scaling = .1905
+    keyboard_empty.scale = (blender_scaling,blender_scaling,blender_scaling)
+    keyboard_empty.rotation_euler[2] = pi
+    keyboard_empty.location = (-blender_scaling*width*0.5,blender_scaling*height*0.5,blender_scaling*0.5)
+
     # deselect everything
     for obj in scn.objects:
         obj.select = False
+
+    keyboard_empty.select = True
+    scn.objects.active = keyboard_empty
+    bpy.ops.object.transform_apply(location=True, scale=True, rotation=True)
+    bpy.ops.object.delete(use_global=False)
 
     side5.select = True
     scn.objects.active = side5
