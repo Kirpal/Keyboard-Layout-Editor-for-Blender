@@ -225,6 +225,8 @@ def getKey(filePath):
                             key["h"] = prev["h"]
                         else:
                             key["h"] = 1
+                        if key["h"] > 1:
+                            key["h"] += (int(key["h"])-1) * 0.05
                         if "x2" in prev:
                             key["x2"] = prev["x2"]
                         if "y2" in prev:
