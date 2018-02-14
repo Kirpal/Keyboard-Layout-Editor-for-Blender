@@ -1017,8 +1017,8 @@ def read(filepath):
                             ["RIGHT", "BOTTOM"]
                         ]
 
-                        # the SA caps are thicker and we need to lift the label more
-                        cap_thickness = 0.001 if key["p"] in ["DCS", "DSA"] else 0.008
+                        cap_thickness = 0.001
+
                         try:
                             # add text
                             new_label = bpy.data.curves.new(
