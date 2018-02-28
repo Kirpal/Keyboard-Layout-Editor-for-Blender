@@ -41,7 +41,7 @@ class JSONImporter(bpy.types.Operator):
 
 
 def menu_import(self, context):
-    self.layout.operator(JSONImporter.bl_idname, text="KLE Raw Data --TESTING-- (.json)")
+    self.layout.operator(JSONImporter.bl_idname, text="KLE Raw Data (.json)")
 
 # register addon
 
