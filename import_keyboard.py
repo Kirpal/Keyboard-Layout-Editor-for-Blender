@@ -1232,7 +1232,8 @@ def read(filepath):
 
                 new_obj_tl.select = True
                 new_switch.select = True
-
+                if "led" in keyboard:
+                    new_led.select = True
                 scn.objects.active = keyboard_empty
                 bpy.ops.object.parent_set(type="OBJECT")
 
