@@ -757,13 +757,13 @@ def read(filepath):
                 else:
                     # set default values if they aren't set
                     if "x2" not in key:
-                        key["x2"] = 0
+                        key["x2"] = key["x"]
                     if "y2" not in key:
-                        key["y2"] = 0
+                        key["y2"] = key["y"]
                     if "w2" not in key:
-                        key["w2"] = 1
+                        key["w2"] = key["w"]
                     if "h2" not in key:
-                        key["h2"] = 1
+                        key["h2"] = key["h"]
 
                 # check if we need the middle strip;
                 # force middle strip for DCS and DSA
@@ -1044,10 +1044,8 @@ def read(filepath):
 
                             label_verticalCorrection = -0.1 if label_text in [",", ";", ".", "[", "]" ] else 0;
 
-                            boxHeight = new_obj_tl.dimensions[
-                                1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
-                            boxWidth = new_obj_tl.dimensions[
-                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+                            boxHeight = key["h"] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
+                            boxWidth  = key["w"] - 0.05 - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
 
                             new_label.data.text_boxes[0].width = boxWidth
                             new_label.data.text_boxes[0].height = boxHeight  + label_verticalCorrection * new_label.data.size
@@ -1122,10 +1120,8 @@ def read(filepath):
                             boxTop = key["y"] + alignLegendsProfile(key["p"])[1]
                             boxLeft = -1 * key["x"] - alignLegendsProfile(key["p"])[0]
 
-                            boxHeight = new_obj_tl.dimensions[
-                                1] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
-                            boxWidth = new_obj_tl.dimensions[
-                                0] - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+                            boxHeight = key["h"] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
+                            boxWidth  = key["w"] - 0.05 - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
 
                             new_label.data.text_boxes[0].width = boxWidth
                             new_label.data.text_boxes[0].height = boxHeight
