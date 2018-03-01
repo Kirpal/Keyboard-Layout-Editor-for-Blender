@@ -35,6 +35,9 @@ Allows you to import keyboard layouts into blender and have them render in 3d
 
 + To make the keycap legends backlit, make the legend color the same as whatever color you made the LEDs
 
+### Blender scene file
+A basic scene for blender can be found in [this gist](https://gist.github.com/wilderjds/5e43cc04f202fe71c51f69e4775a3c4e).  Open the scene in blender before importing.  Please note that lighting, camera and render setup will most probably require some tweaking to fit with your specific layout.
+
 ### Contributions
 
 Special thanks to [@zslane](https://deskthority.net/zslane-u8694/) on Deskthority for the SA models.
