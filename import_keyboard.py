@@ -459,7 +459,7 @@ def read(filepath):
     bpy.ops.group.create(name="Keyboard")
 
     keyboard_empty = bpy.data.objects.new("Keyboard_whole", None)
-    keyboard_empty.location = (0,0,0)
+    keyboard_empty.location = (0, 0, 0)
     scn.objects.link(keyboard_empty)
 
     # set width and height of keyboard
@@ -1031,29 +1031,38 @@ def read(filepath):
                                 type="FONT", name="keylabel")
                             new_label = bpy.data.objects.new(
                                 "label", new_label)
-                            label_text = re.sub("<br ?/?>", "\n", HTMLParser().unescape(key["v"]["labels"][pos]))
+                            label_text = re.sub(
+                                "<br ?/?>", "\n", HTMLParser().unescape(key["v"]["labels"][pos]))
                             new_label.data.body = label_text
 
                             new_label.data.font = fonts[pos]
                             new_label.data.size = key["f"][pos] / 15
 
                             # Here are some computations for the clipping boxes
-                            boxTop = key["y"] + alignLegendsProfile(key["p"])[1]
-                            boxLeft = -1 * key["x"] - alignLegendsProfile(key["p"])[0]
+                            boxTop = key["y"] + \
+                                alignLegendsProfile(key["p"])[1]
+                            boxLeft = -1 * key["x"] - \
+                                alignLegendsProfile(key["p"])[0]
 
-                            label_verticalCorrection = -0.1 if label_text in [",", ";", ".", "[", "]" ] else 0;
+                            label_verticalCorrection = - \
+                                0.1 if label_text in [
+                                    ",", ";", ".", "[", "]"] else 0
 
-                            boxHeight = key["h"] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
-                            boxWidth  = key["w"] - 0.05 - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+                            boxHeight = key["h"] - (alignLegendsProfile(
+                                key["p"])[1] + alignLegendsProfile(key["p"])[3])
+                            boxWidth = key["w"] - 0.05 - (alignLegendsProfile(
+                                key["p"])[0] + alignLegendsProfile(key["p"])[2])
 
                             new_label.data.text_boxes[0].width = boxWidth
-                            new_label.data.text_boxes[0].height = boxHeight  + label_verticalCorrection * new_label.data.size
+                            new_label.data.text_boxes[0].height = boxHeight + \
+                                label_verticalCorrection * new_label.data.size
 
-                            new_label.data.text_boxes[0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
+                            new_label.data.text_boxes[0].y = -1 * (
+                                key["f"][pos] / 15) * legendVerticalCorrection[pos]
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
-                            new_label.location = [boxLeft,boxTop,2]
+                            new_label.location = [boxLeft, boxTop, 2]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1064,7 +1073,8 @@ def read(filepath):
                                 obj.select = False
 
                             # create clipping cube
-                            bpy.ops.mesh.primitive_cube_add(location=(boxLeft-boxWidth*0.5,boxTop+boxHeight*0.5,1))
+                            bpy.ops.mesh.primitive_cube_add(
+                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
                             cube = bpy.context.object
                             cube.scale[0] = 0.5*boxWidth
                             cube.scale[1] = 0.5*boxHeight
@@ -1096,8 +1106,9 @@ def read(filepath):
                             bpy.ops.object.modifier_add(type='BOOLEAN')
                             bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
                             bpy.context.object.modifiers["Boolean"].object = cube
-                            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
-                            bpy.data.objects.remove(cube,True)
+                            bpy.ops.object.modifier_apply(
+                                apply_as='DATA', modifier="Boolean")
+                            bpy.data.objects.remove(cube, True)
 
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
@@ -1116,20 +1127,25 @@ def read(filepath):
                             new_label.data.size = key["f"][pos] / 15
 
                             # Here are some computations for the clipping boxes
-                            boxTop = key["y"] + alignLegendsProfile(key["p"])[1]
-                            boxLeft = -1 * key["x"] - alignLegendsProfile(key["p"])[0]
+                            boxTop = key["y"] + \
+                                alignLegendsProfile(key["p"])[1]
+                            boxLeft = -1 * key["x"] - \
+                                alignLegendsProfile(key["p"])[0]
 
-                            boxHeight = key["h"] - (alignLegendsProfile(key["p"])[1] + alignLegendsProfile(key["p"])[3])
-                            boxWidth  = key["w"] - 0.05 - (alignLegendsProfile(key["p"])[0] + alignLegendsProfile(key["p"])[2])
+                            boxHeight = key["h"] - (alignLegendsProfile(
+                                key["p"])[1] + alignLegendsProfile(key["p"])[3])
+                            boxWidth = key["w"] - 0.05 - (alignLegendsProfile(
+                                key["p"])[0] + alignLegendsProfile(key["p"])[2])
 
                             new_label.data.text_boxes[0].width = boxWidth
                             new_label.data.text_boxes[0].height = boxHeight
 
-                            new_label.data.text_boxes[0].y = -1 * (key["f"][pos] / 15) * legendVerticalCorrection[pos]
+                            new_label.data.text_boxes[0].y = -1 * (
+                                key["f"][pos] / 15) * legendVerticalCorrection[pos]
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
-                            new_label.location = [boxLeft,boxTop,2]
+                            new_label.location = [boxLeft, boxTop, 2]
                             new_label.rotation_euler[2] = pi
 
                             scn.objects.link(new_label)
@@ -1140,7 +1156,8 @@ def read(filepath):
                                 obj.select = False
 
                             # create clipping cube
-                            bpy.ops.mesh.primitive_cube_add(location=(boxLeft-boxWidth*0.5,boxTop+boxHeight*0.5,1))
+                            bpy.ops.mesh.primitive_cube_add(
+                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
                             cube = bpy.context.object
                             cube.scale[0] = 0.5*boxWidth
                             cube.scale[1] = 0.5*boxHeight
@@ -1168,8 +1185,9 @@ def read(filepath):
                             bpy.ops.object.modifier_add(type='BOOLEAN')
                             bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
                             bpy.context.object.modifiers["Boolean"].object = cube
-                            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
-                            bpy.data.objects.remove(cube,True)
+                            bpy.ops.object.modifier_apply(
+                                apply_as='DATA', modifier="Boolean")
+                            bpy.data.objects.remove(cube, True)
 
                             for edge in bpy.context.object.data.edges:
                                 edge.crease = 1
@@ -1348,9 +1366,10 @@ def read(filepath):
 
     # This assumes 1 blender unit = 10cm
     blender_scaling = .1905
-    keyboard_empty.scale = (blender_scaling,blender_scaling,blender_scaling)
+    keyboard_empty.scale = (blender_scaling, blender_scaling, blender_scaling)
     keyboard_empty.rotation_euler[2] = pi
-    keyboard_empty.location = (-blender_scaling*width*0.5,blender_scaling*height*0.5,blender_scaling*0.5)
+    keyboard_empty.location = (-blender_scaling*width*0.5,
+                               blender_scaling*height*0.5, blender_scaling*0.5)
 
     # deselect everything
     for obj in scn.objects:
