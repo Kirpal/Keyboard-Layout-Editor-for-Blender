@@ -41,16 +41,27 @@ A basic scene for blender can be found in [this gist](https://gist.github.com/wi
 ### Contributions
 
 Special thanks to [@zslane](https://deskthority.net/zslane-u8694/) on Deskthority for the SA models.
-Thanks to /u/jacopods for impolementing SA support and rendering examples
+Thanks to [@wilderjs](https://github.com/wilderjs) for implementing SA support
 
 
-### Examples (outdated):
+### Examples:
 
-|Render|Layout|
-|---------|---------|
-|[Imgur](http://i.imgur.com/oouyHOU.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/92d9daa6db42bb8f39dadec3ef0e299b)|
-|[Imgur](http://i.imgur.com/y5Uzhqd.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/49b89881ec3ff9e048d0ad05d83e1b46)|
-|[Imgur](http://i.imgur.com/sUVdJex.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/6861d5d0070a788ad4f9d57f0c0fb9af)|
-|[Imgur](http://i.imgur.com/GiPgGKe.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/10fab2ecc41b32e92e7331c54f943d73)|
-|[Imgur](http://i.imgur.com/8lL7dAR.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/38f7920dbbbc144d1a87692f18edc8d8)|
-|[Imgur](http://i.imgur.com/7KKlx9L.png)|[Layout](http://www.keyboard-layout-editor.com/#/gists/53767e112a7bb65e3b7df17c4301030f)|
+![Example 1](examples/1.jpg)
+
+<sup>Courtesy of [/u/jacopods](https://reddit.com/u/jacopods)</sup>
+
+&nbsp;
+
+![Example 2](examples/2.jpg)
+
+<sup>Courtesy of [/u/zzubnik](https://reddit.com/u/zzubnik)</sup>
+
+&nbsp;
+
+![Example 3](examples/3.jpg)
+
+<sup>Courtesy of [/u/zzubnik](https://reddit.com/u/zzubnik)</sup>
+
+&nbsp;
+
+*Please open a pull request if you'd like to add more examples*
