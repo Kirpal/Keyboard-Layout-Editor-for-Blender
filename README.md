@@ -52,7 +52,7 @@ A basic scene for blender can be found in [this gist](https://gist.github.com/wi
 ### Contributions
 
 Special thanks to [@zslane](https://deskthority.net/zslane-u8694/) on Deskthority for the SA models.
-Thanks to [@wilderjs](https://github.com/wilderjs) for implementing SA support
+Thanks to [@wilderjds](https://github.com/wilderjds) for implementing SA support
 
 #### To-Do
 
