@@ -49,10 +49,13 @@ Allows you to import keyboard layouts into blender and render them in 3d
 ### Blender scene file
 A basic scene for blender can be found in [this gist](https://gist.github.com/wilderjds/5e43cc04f202fe71c51f69e4775a3c4e).  Open the scene in blender before importing.  Please note that lighting, camera and render setup will most probably require some tweaking to fit with your specific layout.
 
-### Contributions
+### Special Thanks To:
 
-Special thanks to [@zslane](https://deskthority.net/zslane-u8694/) on Deskthority for the SA models.
-Thanks to [@wilderjds](https://github.com/wilderjds) for implementing SA support
+[@zslane](https://deskthority.net/zslane-u8694/) on Deskthority for the SA models
+
+[@Kaporkle](https://geekhack.org/index.php?PHPSESSID=mhqa0bak1to87brcdbp6ch0timqstntl&action=profile;u=20953) on Geekhack for the DSA models
+
+[@wilderjds](https://github.com/wilderjds) for implementing SA support
 
 #### To-Do
 
