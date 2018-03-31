@@ -913,6 +913,7 @@ def read(filepath):
 
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.remove_doubles()
+                bpy.ops.mesh.faces_shade_smooth()
                 bpy.ops.object.mode_set(mode='OBJECT')
 
                 # name the key
