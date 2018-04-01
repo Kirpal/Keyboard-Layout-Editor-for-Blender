@@ -1132,13 +1132,18 @@ def read(filepath):
                             boxLeft = -1 * key["x"] - \
                                 alignLegendsProfile(key["p"])[0]
 
+                            label_verticalCorrection = - \
+                                0.1 if label_text in [
+                                    ",", ";", ".", "[", "]"] else 0
+
                             boxHeight = key["h"] - (alignLegendsProfile(
                                 key["p"])[1] + alignLegendsProfile(key["p"])[3])
                             boxWidth = key["w"] - 0.05 - (alignLegendsProfile(
                                 key["p"])[0] + alignLegendsProfile(key["p"])[2])
 
                             new_label.data.text_boxes[0].width = boxWidth
-                            new_label.data.text_boxes[0].height = boxHeight
+                            new_label.data.text_boxes[0].height = boxHeight + \
+                                label_verticalCorrection * new_label.data.size
 
                             new_label.data.text_boxes[0].y = -1 * (
                                 key["f"][pos] / 15) * legendVerticalCorrection[pos]
@@ -1167,7 +1172,7 @@ def read(filepath):
                             scn.objects.active = new_label
 
                             bpy.ops.object.modifier_add(type='SHRINKWRAP')
-                            new_label.modifiers["Shrinkwrap"].offset = 0.0005
+                            new_label.modifiers["Shrinkwrap"].offset = 0.0001
                             new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
                             new_label.modifiers[
                                 "Shrinkwrap"].use_project_z = True
@@ -1178,8 +1183,12 @@ def read(filepath):
                             new_label.modifiers[
                                 "Shrinkwrap"].target = new_obj_tl
                             new_label.to_mesh(scn, True, "PREVIEW")
-                            new_label.active_material = bpy.data.materials[
-                                "legend: %s-%s" % (key["row"], key["col"])]
+                            if legendLed:
+                                new_label.active_material = bpy.data.materials["led: %s" %
+                                                                               key["t"][pos]]
+                            else:
+                                new_label.active_material = bpy.data.materials[key["t"][pos]]
+
                             bpy.ops.object.convert(target='MESH')
 
                             bpy.ops.object.modifier_add(type='BOOLEAN')
