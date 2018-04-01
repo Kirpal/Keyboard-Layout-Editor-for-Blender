@@ -1063,6 +1063,8 @@ def read(filepath):
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
+                            new_label.data.extrude = 0.01
+
                             new_label.location = [boxLeft, boxTop, 2]
                             new_label.rotation_euler[2] = pi
 
@@ -1073,16 +1075,24 @@ def read(filepath):
                             for obj in scn.objects:
                                 obj.select = False
 
-                            # create clipping cube
-                            bpy.ops.mesh.primitive_cube_add(
-                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
-                            cube = bpy.context.object
-                            cube.scale[0] = 0.5*boxWidth
-                            cube.scale[1] = 0.5*boxHeight
-                            cube.name = 'clipCube'
-
                             new_label.select = True
                             scn.objects.active = new_label
+
+                            new_label.to_mesh(scn, True, "PREVIEW")
+                            if legendLed:
+                                new_label.active_material = bpy.data.materials["led: %s" %
+                                                                               key["t"][pos]]
+                            else:
+                                new_label.active_material = bpy.data.materials[key["t"][pos]]
+                            bpy.ops.object.convert(target='MESH')
+                            scn.objects.active = new_label
+
+                            if key["f"][pos] > 6:
+                                bpy.ops.object.modifier_add(type='REMESH')
+                                new_label.modifiers["Remesh"].octree_depth = (4 if len(label_text) == 1 else 7)
+                                new_label.modifiers["Remesh"].use_remove_disconnected = False
+                                bpy.ops.object.modifier_apply(
+                                    apply_as='DATA', modifier="Remesh")
 
                             bpy.ops.object.modifier_add(type='SHRINKWRAP')
                             new_label.modifiers["Shrinkwrap"].offset = 0.0005
@@ -1095,14 +1105,19 @@ def read(filepath):
                                 "Shrinkwrap"].use_negative_direction = True
                             new_label.modifiers[
                                 "Shrinkwrap"].target = new_obj_tl
-                            new_label.to_mesh(scn, True, "PREVIEW")
-                            if legendLed:
-                                new_label.active_material = bpy.data.materials["led: %s" %
-                                                                               key["t"][pos]]
-                            else:
-                                new_label.active_material = bpy.data.materials[key["t"][pos]]
+                            bpy.ops.object.modifier_apply(
+                                apply_as='DATA', modifier="Shrinkwrap")
 
-                            bpy.ops.object.convert(target='MESH')
+                            # create clipping cube
+                            bpy.ops.mesh.primitive_cube_add(
+                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
+                            cube = bpy.context.object
+                            cube.scale[0] = 0.5*boxWidth
+                            cube.scale[1] = 0.5*boxHeight
+                            cube.name = 'clipCube'
+
+                            new_label.select = True
+                            scn.objects.active = new_label
 
                             bpy.ops.object.modifier_add(type='BOOLEAN')
                             bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
@@ -1121,8 +1136,9 @@ def read(filepath):
                                 type="FONT", name="keylabel")
                             new_label = bpy.data.objects.new(
                                 "label", new_label)
-                            new_label.data.body = key[
-                                "v"]["labels"][pos].upper()
+                            label_text = re.sub(
+                                "<br ?/?>", "\n", HTMLParser().unescape(key["v"]["labels"][pos]))
+                            new_label.data.body = label_text
 
                             new_label.data.font = noto
                             new_label.data.size = key["f"][pos] / 15
@@ -1151,6 +1167,8 @@ def read(filepath):
                             new_label.data.align_x = alignText[pos][0]
                             new_label.data.align_y = alignText[pos][1]
 
+                            new_label.data.extrude = 0.01
+
                             new_label.location = [boxLeft, boxTop, 2]
                             new_label.rotation_euler[2] = pi
 
@@ -1161,16 +1179,24 @@ def read(filepath):
                             for obj in scn.objects:
                                 obj.select = False
 
-                            # create clipping cube
-                            bpy.ops.mesh.primitive_cube_add(
-                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
-                            cube = bpy.context.object
-                            cube.scale[0] = 0.5*boxWidth
-                            cube.scale[1] = 0.5*boxHeight
-                            cube.name = 'clipCube'
-
                             new_label.select = True
                             scn.objects.active = new_label
+
+                            new_label.to_mesh(scn, True, "PREVIEW")
+                            if legendLed:
+                                new_label.active_material = bpy.data.materials["led: %s" %
+                                                                               key["t"][pos]]
+                            else:
+                                new_label.active_material = bpy.data.materials[key["t"][pos]]
+                            bpy.ops.object.convert(target='MESH')
+                            scn.objects.active = new_label
+
+                            if key["f"][pos] > 6:
+                                bpy.ops.object.modifier_add(type='REMESH')
+                                new_label.modifiers["Remesh"].octree_depth = (4 if len(label_text) == 1 else 7)
+                                new_label.modifiers["Remesh"].use_remove_disconnected = False
+                                bpy.ops.object.modifier_apply(
+                                    apply_as='DATA', modifier="Remesh")
 
                             bpy.ops.object.modifier_add(type='SHRINKWRAP')
                             new_label.modifiers["Shrinkwrap"].offset = 0.0001
@@ -1183,14 +1209,20 @@ def read(filepath):
                                 "Shrinkwrap"].use_negative_direction = True
                             new_label.modifiers[
                                 "Shrinkwrap"].target = new_obj_tl
-                            new_label.to_mesh(scn, True, "PREVIEW")
-                            if legendLed:
-                                new_label.active_material = bpy.data.materials["led: %s" %
-                                                                               key["t"][pos]]
-                            else:
-                                new_label.active_material = bpy.data.materials[key["t"][pos]]
 
-                            bpy.ops.object.convert(target='MESH')
+                            bpy.ops.object.modifier_apply(
+                                apply_as='DATA', modifier="Shrinkwrap")
+
+                            # create clipping cube
+                            bpy.ops.mesh.primitive_cube_add(
+                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
+                            cube = bpy.context.object
+                            cube.scale[0] = 0.5*boxWidth
+                            cube.scale[1] = 0.5*boxHeight
+                            cube.name = 'clipCube'
+
+                            new_label.select = True
+                            scn.objects.active = new_label
 
                             bpy.ops.object.modifier_add(type='BOOLEAN')
                             bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
