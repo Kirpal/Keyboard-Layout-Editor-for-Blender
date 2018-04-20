@@ -521,6 +521,121 @@ def read(filepath):
             "SA4": [0.2, 0.23, 0.2, 0.23]
         }.get(p, [0.25, 0.15, 0.25, 0.325])
 
+# add text to keys
+    def addText(font, offset=0.0005):
+        # add text
+        new_label = bpy.data.curves.new(
+            type="FONT", name="keylabel")
+        new_label = bpy.data.objects.new(
+            "label", new_label)
+        label_text = re.sub(
+            "<br ?/?>", "\n", HTMLParser().unescape(key["v"]["labels"][pos]))
+        new_label.data.body = label_text
+
+        new_label.data.font = font
+        new_label.data.size = key["f"][pos] / 15
+
+        # Here are some computations for the clipping boxes
+        boxTop = key["y"] + \
+            alignLegendsProfile(key["p"])[1]
+        boxLeft = -1 * key["x"] - \
+            alignLegendsProfile(key["p"])[0]
+
+        label_verticalCorrection = - \
+            0.1 if label_text in [
+                ",", ";", ".", "[", "]"] else 0
+
+        boxHeight = key["h"] - (alignLegendsProfile(
+            key["p"])[1] + alignLegendsProfile(key["p"])[3])
+        boxWidth = key["w"] - 0.05 - (alignLegendsProfile(
+            key["p"])[0] + alignLegendsProfile(key["p"])[2])
+
+        new_label.data.text_boxes[0].width = boxWidth
+        new_label.data.text_boxes[0].height = boxHeight + \
+            label_verticalCorrection * new_label.data.size
+
+        new_label.data.text_boxes[0].y = -1 * (
+            key["f"][pos] / 15) * legendVerticalCorrection[pos]
+        new_label.data.align_x = alignText[pos][0]
+        new_label.data.align_y = alignText[pos][1]
+
+        new_label.data.extrude = 0.01
+
+        new_label.location = [boxLeft, boxTop, 2]
+        new_label.rotation_euler[2] = pi
+
+        scn.objects.link(new_label)
+        scn.update()
+
+        # deselect everything
+        for obj in scn.objects:
+            obj.select = False
+
+        new_label.select = True
+        scn.objects.active = new_label
+
+        new_label.to_mesh(scn, True, "PREVIEW")
+        if legendLed:
+            new_label.active_material = bpy.data.materials["led: %s" %
+                                                            key["t"][pos]]
+        else:
+            new_label.active_material = bpy.data.materials[key["t"][pos]]
+        bpy.ops.object.convert(target='MESH')
+        scn.objects.active = new_label
+
+        if key["f"][pos] > 6:
+            bpy.ops.object.modifier_add(type='REMESH')
+            new_label.modifiers["Remesh"].octree_depth = (4 if len(label_text) == 1 else 7)
+            new_label.modifiers["Remesh"].use_remove_disconnected = False
+            bpy.ops.object.modifier_apply(
+                apply_as='DATA', modifier="Remesh")
+
+        bpy.ops.object.modifier_add(type='SHRINKWRAP')
+        new_label.modifiers["Shrinkwrap"].offset = offset
+        new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
+        new_label.modifiers[
+            "Shrinkwrap"].use_project_z = True
+        new_label.modifiers[
+            "Shrinkwrap"].use_positive_direction = True
+        new_label.modifiers[
+            "Shrinkwrap"].use_negative_direction = True
+        new_label.modifiers[
+            "Shrinkwrap"].target = new_obj_tl
+        bpy.ops.object.modifier_apply(
+            apply_as='DATA', modifier="Shrinkwrap")
+
+        # create clipping cube
+        bpy.ops.mesh.primitive_cube_add(
+            location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
+        cube = bpy.context.object
+        cube.scale[0] = 0.5*boxWidth
+        cube.scale[1] = 0.5*boxHeight
+        cube.name = 'clipCube'
+
+        new_label.select = True
+        scn.objects.active = new_label
+
+        bpy.ops.object.modifier_add(type='BOOLEAN')
+        bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
+        bpy.context.object.modifiers["Boolean"].object = cube
+        bpy.ops.object.modifier_apply(
+            apply_as='DATA', modifier="Boolean")
+        bpy.data.objects.remove(cube, True)
+
+        for edge in bpy.context.object.data.edges:
+            edge.crease = 1
+
+        new_label.location[2] += cap_thickness
+
+        # deselect everything
+        for obj in scn.objects:
+            obj.select = False
+
+        new_label.select = True
+        new_obj_tl.select = True
+        scn.objects.active = new_obj_tl
+        bpy.ops.object.join()
+
     # iterate over rows in keyboard
     for row in keyboard["rows"]:
         # iterate over keys in row
@@ -1027,223 +1142,9 @@ def read(filepath):
                         cap_thickness = 0.001
 
                         try:
-                            # add text
-                            new_label = bpy.data.curves.new(
-                                type="FONT", name="keylabel")
-                            new_label = bpy.data.objects.new(
-                                "label", new_label)
-                            label_text = re.sub(
-                                "<br ?/?>", "\n", HTMLParser().unescape(key["v"]["labels"][pos]))
-                            new_label.data.body = label_text
-
-                            new_label.data.font = fonts[pos]
-                            new_label.data.size = key["f"][pos] / 15
-
-                            # Here are some computations for the clipping boxes
-                            boxTop = key["y"] + \
-                                alignLegendsProfile(key["p"])[1]
-                            boxLeft = -1 * key["x"] - \
-                                alignLegendsProfile(key["p"])[0]
-
-                            label_verticalCorrection = - \
-                                0.1 if label_text in [
-                                    ",", ";", ".", "[", "]"] else 0
-
-                            boxHeight = key["h"] - (alignLegendsProfile(
-                                key["p"])[1] + alignLegendsProfile(key["p"])[3])
-                            boxWidth = key["w"] - 0.05 - (alignLegendsProfile(
-                                key["p"])[0] + alignLegendsProfile(key["p"])[2])
-
-                            new_label.data.text_boxes[0].width = boxWidth
-                            new_label.data.text_boxes[0].height = boxHeight + \
-                                label_verticalCorrection * new_label.data.size
-
-                            new_label.data.text_boxes[0].y = -1 * (
-                                key["f"][pos] / 15) * legendVerticalCorrection[pos]
-                            new_label.data.align_x = alignText[pos][0]
-                            new_label.data.align_y = alignText[pos][1]
-
-                            new_label.data.extrude = 0.01
-
-                            new_label.location = [boxLeft, boxTop, 2]
-                            new_label.rotation_euler[2] = pi
-
-                            scn.objects.link(new_label)
-                            scn.update()
-
-                            # deselect everything
-                            for obj in scn.objects:
-                                obj.select = False
-
-                            new_label.select = True
-                            scn.objects.active = new_label
-
-                            new_label.to_mesh(scn, True, "PREVIEW")
-                            if legendLed:
-                                new_label.active_material = bpy.data.materials["led: %s" %
-                                                                               key["t"][pos]]
-                            else:
-                                new_label.active_material = bpy.data.materials[key["t"][pos]]
-                            bpy.ops.object.convert(target='MESH')
-                            scn.objects.active = new_label
-
-                            if key["f"][pos] > 6:
-                                bpy.ops.object.modifier_add(type='REMESH')
-                                new_label.modifiers["Remesh"].octree_depth = (4 if len(label_text) == 1 else 7)
-                                new_label.modifiers["Remesh"].use_remove_disconnected = False
-                                bpy.ops.object.modifier_apply(
-                                    apply_as='DATA', modifier="Remesh")
-
-                            bpy.ops.object.modifier_add(type='SHRINKWRAP')
-                            new_label.modifiers["Shrinkwrap"].offset = 0.0005
-                            new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
-                            new_label.modifiers[
-                                "Shrinkwrap"].use_project_z = True
-                            new_label.modifiers[
-                                "Shrinkwrap"].use_positive_direction = True
-                            new_label.modifiers[
-                                "Shrinkwrap"].use_negative_direction = True
-                            new_label.modifiers[
-                                "Shrinkwrap"].target = new_obj_tl
-                            bpy.ops.object.modifier_apply(
-                                apply_as='DATA', modifier="Shrinkwrap")
-
-                            # create clipping cube
-                            bpy.ops.mesh.primitive_cube_add(
-                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
-                            cube = bpy.context.object
-                            cube.scale[0] = 0.5*boxWidth
-                            cube.scale[1] = 0.5*boxHeight
-                            cube.name = 'clipCube'
-
-                            new_label.select = True
-                            scn.objects.active = new_label
-
-                            bpy.ops.object.modifier_add(type='BOOLEAN')
-                            bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
-                            bpy.context.object.modifiers["Boolean"].object = cube
-                            bpy.ops.object.modifier_apply(
-                                apply_as='DATA', modifier="Boolean")
-                            bpy.data.objects.remove(cube, True)
-
-                            for edge in bpy.context.object.data.edges:
-                                edge.crease = 1
-
-                            new_label.location[2] += cap_thickness
+                            addText(fonts[pos])
                         except AttributeError:
-                            # add text
-                            new_label = bpy.data.curves.new(
-                                type="FONT", name="keylabel")
-                            new_label = bpy.data.objects.new(
-                                "label", new_label)
-                            label_text = re.sub(
-                                "<br ?/?>", "\n", HTMLParser().unescape(key["v"]["labels"][pos]))
-                            new_label.data.body = label_text
-
-                            new_label.data.font = noto
-                            new_label.data.size = key["f"][pos] / 15
-
-                            # Here are some computations for the clipping boxes
-                            boxTop = key["y"] + \
-                                alignLegendsProfile(key["p"])[1]
-                            boxLeft = -1 * key["x"] - \
-                                alignLegendsProfile(key["p"])[0]
-
-                            label_verticalCorrection = - \
-                                0.1 if label_text in [
-                                    ",", ";", ".", "[", "]"] else 0
-
-                            boxHeight = key["h"] - (alignLegendsProfile(
-                                key["p"])[1] + alignLegendsProfile(key["p"])[3])
-                            boxWidth = key["w"] - 0.05 - (alignLegendsProfile(
-                                key["p"])[0] + alignLegendsProfile(key["p"])[2])
-
-                            new_label.data.text_boxes[0].width = boxWidth
-                            new_label.data.text_boxes[0].height = boxHeight + \
-                                label_verticalCorrection * new_label.data.size
-
-                            new_label.data.text_boxes[0].y = -1 * (
-                                key["f"][pos] / 15) * legendVerticalCorrection[pos]
-                            new_label.data.align_x = alignText[pos][0]
-                            new_label.data.align_y = alignText[pos][1]
-
-                            new_label.data.extrude = 0.01
-
-                            new_label.location = [boxLeft, boxTop, 2]
-                            new_label.rotation_euler[2] = pi
-
-                            scn.objects.link(new_label)
-                            scn.update()
-
-                            # deselect everything
-                            for obj in scn.objects:
-                                obj.select = False
-
-                            new_label.select = True
-                            scn.objects.active = new_label
-
-                            new_label.to_mesh(scn, True, "PREVIEW")
-                            if legendLed:
-                                new_label.active_material = bpy.data.materials["led: %s" %
-                                                                               key["t"][pos]]
-                            else:
-                                new_label.active_material = bpy.data.materials[key["t"][pos]]
-                            bpy.ops.object.convert(target='MESH')
-                            scn.objects.active = new_label
-
-                            if key["f"][pos] > 6:
-                                bpy.ops.object.modifier_add(type='REMESH')
-                                new_label.modifiers["Remesh"].octree_depth = (4 if len(label_text) == 1 else 7)
-                                new_label.modifiers["Remesh"].use_remove_disconnected = False
-                                bpy.ops.object.modifier_apply(
-                                    apply_as='DATA', modifier="Remesh")
-
-                            bpy.ops.object.modifier_add(type='SHRINKWRAP')
-                            new_label.modifiers["Shrinkwrap"].offset = 0.0001
-                            new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
-                            new_label.modifiers[
-                                "Shrinkwrap"].use_project_z = True
-                            new_label.modifiers[
-                                "Shrinkwrap"].use_positive_direction = True
-                            new_label.modifiers[
-                                "Shrinkwrap"].use_negative_direction = True
-                            new_label.modifiers[
-                                "Shrinkwrap"].target = new_obj_tl
-
-                            bpy.ops.object.modifier_apply(
-                                apply_as='DATA', modifier="Shrinkwrap")
-
-                            # create clipping cube
-                            bpy.ops.mesh.primitive_cube_add(
-                                location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
-                            cube = bpy.context.object
-                            cube.scale[0] = 0.5*boxWidth
-                            cube.scale[1] = 0.5*boxHeight
-                            cube.name = 'clipCube'
-
-                            new_label.select = True
-                            scn.objects.active = new_label
-
-                            bpy.ops.object.modifier_add(type='BOOLEAN')
-                            bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
-                            bpy.context.object.modifiers["Boolean"].object = cube
-                            bpy.ops.object.modifier_apply(
-                                apply_as='DATA', modifier="Boolean")
-                            bpy.data.objects.remove(cube, True)
-
-                            for edge in bpy.context.object.data.edges:
-                                edge.crease = 1
-
-                            new_label.location[2] += cap_thickness
-
-                        # deselect everything
-                        for obj in scn.objects:
-                            obj.select = False
-
-                        new_label.select = True
-                        new_obj_tl.select = True
-                        scn.objects.active = new_obj_tl
-                        bpy.ops.object.join()
+                            addText(noto, 0.0001)
 
                 # rotate key
                 if "r" in key:
