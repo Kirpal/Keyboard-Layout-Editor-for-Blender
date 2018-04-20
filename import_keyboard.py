@@ -997,91 +997,93 @@ def read(filepath):
                     new_led.name = "led: %s-%s" % (key["row"], key["col"])
 
                 for pos, label in enumerate(key["v"]["labels"]):
-                    legendLed = False
-                    if label != "":
-                        if "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"][:3]:
-                            legendLed = True
-                            if "led: %s" % key["t"][pos] not in bpy.data.materials:
+                    # make sure it's not a front legend
+                    if pos < 9:
+                        legendLed = False
+                        if label != "":
+                            if "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"][:3]:
+                                legendLed = True
+                                if "led: %s" % key["t"][pos] not in bpy.data.materials:
+                                    # new material for legend
+                                    m = Material()
+                                    m.set_cycles()
+                                    m.make_material("led: %s" % key["t"][pos])
+                                    # make new emission node
+                                    emission = m.makeNode(
+                                        'ShaderNodeEmission', 'Emission')
+                                    # set legend color
+                                    emission.inputs["Color"].default_value = [
+                                        keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
+                                    emission.inputs[
+                                        "Strength"].default_value = keyboard["led"][3] * 5
+
+                                    # add material output node
+                                    materialOutput = m.nodes['Material Output']
+                                    # attach emission to material output
+                                    m.link(emission, 'Emission',
+                                        materialOutput, 'Surface')
+                            elif key["t"][pos] not in bpy.data.materials:
                                 # new material for legend
                                 m = Material()
                                 m.set_cycles()
-                                m.make_material("led: %s" % key["t"][pos])
-                                # make new emission node
-                                emission = m.makeNode(
-                                    'ShaderNodeEmission', 'Emission')
-                                # set legend color
-                                emission.inputs["Color"].default_value = [
-                                    keyboard["led"][0] / 255, keyboard["led"][1] / 255, keyboard["led"][2] / 255, 1]
-                                emission.inputs[
-                                    "Strength"].default_value = keyboard["led"][3] * 5
+                                m.make_material(key["t"][pos])
+                                # make new diffuse node
+                                diffuseBSDF = m.nodes['Diffuse BSDF']
+                                # convert hex to rgb
+                                rgb = hex2rgb(key["t"][pos])
+                                diffuseBSDF.inputs["Color"].default_value = [
+                                    rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
 
                                 # add material output node
                                 materialOutput = m.nodes['Material Output']
-                                # attach emission to material output
-                                m.link(emission, 'Emission',
-                                       materialOutput, 'Surface')
-                        elif key["t"][pos] not in bpy.data.materials:
-                            # new material for legend
-                            m = Material()
-                            m.set_cycles()
-                            m.make_material(key["t"][pos])
-                            # make new diffuse node
-                            diffuseBSDF = m.nodes['Diffuse BSDF']
-                            # convert hex to rgb
-                            rgb = hex2rgb(key["t"][pos])
-                            diffuseBSDF.inputs["Color"].default_value = [
-                                rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
+                                # add glossy node
+                                glossyBSDF = m.makeNode(
+                                    'ShaderNodeBsdfGlossy', 'Glossy BSDF')
+                                # set glossy node color to white and roughness to
+                                # 0.3
+                                glossyBSDF.inputs[
+                                    "Color"].default_value = [1, 1, 1, 1]
+                                glossyBSDF.inputs[
+                                    "Roughness"].default_value = 0.3
+                                # add mix node
+                                mixShader = m.makeNode(
+                                    'ShaderNodeMixShader', 'Mix Shader')
+                                # set mix node factor to 0.8
+                                mixShader.inputs['Fac'].default_value = 0.8
+                                # connect glossy and diffuse nodes to the mix node, and connect
+                                # that to the material output
+                                m.link(glossyBSDF, 'BSDF', mixShader, 1)
+                                m.link(diffuseBSDF, 'BSDF', mixShader, 2)
+                                m.link(mixShader, 'Shader',
+                                    materialOutput, 'Surface')
 
-                            # add material output node
-                            materialOutput = m.nodes['Material Output']
-                            # add glossy node
-                            glossyBSDF = m.makeNode(
-                                'ShaderNodeBsdfGlossy', 'Glossy BSDF')
-                            # set glossy node color to white and roughness to
-                            # 0.3
-                            glossyBSDF.inputs[
-                                "Color"].default_value = [1, 1, 1, 1]
-                            glossyBSDF.inputs[
-                                "Roughness"].default_value = 0.3
-                            # add mix node
-                            mixShader = m.makeNode(
-                                'ShaderNodeMixShader', 'Mix Shader')
-                            # set mix node factor to 0.8
-                            mixShader.inputs['Fac'].default_value = 0.8
-                            # connect glossy and diffuse nodes to the mix node, and connect
-                            # that to the material output
-                            m.link(glossyBSDF, 'BSDF', mixShader, 1)
-                            m.link(diffuseBSDF, 'BSDF', mixShader, 2)
-                            m.link(mixShader, 'Shader',
-                                   materialOutput, 'Surface')
+                            # This requires an explanation: Blender text vertival alignment accounts for line spacing, which is apparently set to ~1/.6
+                            # when aligning at top one
+                            legendVerticalCorrection = [
+                                0.6, 0.6, 0.6,
+                                0.8, 0.8, 0.8,
+                                1.0, 1.0, 1.0,
+                                1.0, 1.0, 1.0
+                            ]
 
-                        # This requires an explanation: Blender text vertival alignment accounts for line spacing, which is apparently set to ~1/.6
-                        # when aligning at top one
-                        legendVerticalCorrection = [
-                            0.6, 0.6, 0.6,
-                            0.8, 0.8, 0.8,
-                            1.0, 1.0, 1.0,
-                            1.0, 1.0, 1.0
-                        ]
+                            alignText = [
+                                ["LEFT", "TOP"],
+                                ["CENTER", "TOP"],
+                                ["RIGHT", "TOP"],
+                                ["LEFT", "CENTER"],
+                                ["CENTER", "CENTER"],
+                                ["RIGHT", "CENTER"],
+                                ["LEFT", "BOTTOM"],
+                                ["CENTER", "BOTTOM"],
+                                ["RIGHT", "BOTTOM"]
+                            ]
 
-                        alignText = [
-                            ["LEFT", "TOP"],
-                            ["CENTER", "TOP"],
-                            ["RIGHT", "TOP"],
-                            ["LEFT", "CENTER"],
-                            ["CENTER", "CENTER"],
-                            ["RIGHT", "CENTER"],
-                            ["LEFT", "BOTTOM"],
-                            ["CENTER", "BOTTOM"],
-                            ["RIGHT", "BOTTOM"]
-                        ]
+                            cap_thickness = 0.001
 
-                        cap_thickness = 0.001
-
-                        try:
-                            addText(fonts[pos])
-                        except AttributeError:
-                            addText(noto, 0.0001)
+                            try:
+                                addText(fonts[pos])
+                            except AttributeError:
+                                addText(noto, 0.0001)
 
                 # rotate key
                 if "r" in key:
