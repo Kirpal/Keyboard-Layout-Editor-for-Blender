@@ -273,141 +273,78 @@ def getKey(filePath):
                             rowData["ry2"] = rowData["ry"]
 
                         # if rowData has property set then add it to key
-                        if "c" in rowData:
-                            key["c"] = rowData["c"]
-                        else:
-                            key["c"] = "#cccccc"
-                        if "t" in rowData:
-                            key["t"] = rowData["t"]
-                        else:
-                            key["t"] = "#111111"
-                        if "g" in rowData:
-                            key["g"] = rowData["g"]
                         if "a" in rowData:
-                            key["a"] = rowData["a"]
-                            align = key["a"]
-                        if "f" in rowData:
-                            key["f"] = rowData["f"]
-                        else:
-                            key["f"] = 3
-                        if "fa" in rowData:
-                            key["fa"] = rowData["fa"]
-                        else:
-                            key["fa"] = None
-                        if "f2" in rowData:
-                            key["f2"] = rowData["f2"]
-                        if "r" in rowData:
-                            key["r"] = rowData["r"]
-                        if "rx" in rowData:
-                            key["rx"] = rowData["rx"]
-                        if "ry" in rowData:
-                            key["ry"] = rowData["ry"]
-                        if "ry2" in rowData:
-                            if "yCoord" in rowData:
-                                key["ry2"] = rowData["ry2"] + rowData["yCoord"]
-                            else:
-                                key["ry2"] = rowData["ry2"]
+                            align = rowData["a"]
 
-                        if "p" not in rowData:
-                            key["p"] = fallbackProfile
-                        else:
-                            key["p"] = parseProfile(rowData["p"], "n" in key)
-
-                        # set the text on the key
-                        key["v"] = {}
-                        key["v"]["labels"] = reorderLabels(
-                            value.split('\n'), align)
-                        key["f"] = reorderSizes(key["f"], key["fa"], align)
-                        key["t"] = reorderColors(
-                            None, key["t"], align)
-                        key["v"]["raw"] = value
-
-                        # set the row and column of the key
-                        key["row"] = rowNum
-                        key["col"] = pos
-                        # set x and y coordinate of key
-                        key["x"] = x
-                        key["y"] = rowData["y"]
-
-                        if "rx" in key:
-                            key["x"] += key["rx"]
-                        if "ry2" in key:
-                            key["y"] = key["ry2"]
-
-                        # add the key to the current row
-                        keyboard["rows"][key["row"]].append(key)
-                        keyboard["keyCount"] += 1
                     # if the previous item isn't a dict
                     else:
-                        # if rowData has property set then add it to key
-                        if "c" in rowData:
-                            key["c"] = rowData["c"]
-                        else:
-                            key["c"] = "#cccccc"
-                        if "t" in rowData:
-                            key["t"] = rowData["t"]
-                        else:
-                            key["t"] = "#111111"
-                        if "g" in rowData:
-                            key["g"] = rowData["g"]
-                        if "a" in rowData:
-                            key["a"] = rowData["a"]
-                        if "f" in rowData:
-                            key["f"] = rowData["f"]
-                        else:
-                            key["f"] = 3
-                        if "fa" in rowData:
-                            key["fa"] = rowData["fa"]
-                        else:
-                            key["fa"] = None
-                        if "f2" in rowData:
-                            key["f2"] = rowData["f2"]
-                        if "r" in rowData:
-                            key["r"] = rowData["r"]
-                        if "rx" in rowData:
-                            key["rx"] = rowData["rx"]
-                        if "ry" in rowData:
-                            key["ry"] = rowData["ry"]
-                        if "ry2" in rowData:
-                            if "yCoord" in rowData:
-                                key["ry2"] = rowData["ry2"] + rowData["yCoord"]
-                            else:
-                                key["ry2"] = rowData["ry2"]
-
-                        if "p" not in rowData:
-                            key["p"] = fallbackProfile
-                        else:
-                            key["p"] = parseProfile(rowData["p"], "n" in key)
-
                         key["xCoord"] = 0
                         key["d"] = False
                         key["w"] = 1 - 0.05
                         key["h"] = 1
 
-                        # set the text on the key
-                        key["v"] = {}
-                        key["v"]["labels"] = reorderLabels(
-                            value.split('\n'), align)
-                        key["f"] = reorderSizes(key["f"], key["fa"], align)
-                        key["t"] = reorderColors(
-                            None, key["t"], align)
-                        key["v"]["raw"] = value
+                    # if rowData has property set then add it to key
+                    if "c" in rowData:
+                        key["c"] = rowData["c"]
+                    else:
+                        key["c"] = "#cccccc"
+                    if "t" in rowData:
+                        key["t"] = rowData["t"]
+                    else:
+                        key["t"] = "#111111"
+                    if "g" in rowData:
+                        key["g"] = rowData["g"]
+                    if "a" in rowData:
+                        key["a"] = rowData["a"]
+                    if "f" in rowData:
+                        key["f"] = rowData["f"]
+                    else:
+                        key["f"] = 3
+                    if "fa" in rowData:
+                        key["fa"] = rowData["fa"]
+                    else:
+                        key["fa"] = None
+                    if "f2" in rowData:
+                        key["f2"] = rowData["f2"]
+                    if "r" in rowData:
+                        key["r"] = rowData["r"]
+                    if "rx" in rowData:
+                        key["rx"] = rowData["rx"]
+                    if "ry" in rowData:
+                        key["ry"] = rowData["ry"]
+                    if "ry2" in rowData:
+                        if "yCoord" in rowData:
+                            key["ry2"] = rowData["ry2"] + rowData["yCoord"]
+                        else:
+                            key["ry2"] = rowData["ry2"]
 
-                        # set the row and column of the key
-                        key["row"] = rowNum
-                        key["col"] = pos
-                        # set x and y coordinates of key
-                        key["x"] = x
-                        key["y"] = rowData["y"]
+                    if "p" not in rowData:
+                        key["p"] = fallbackProfile
+                    else:
+                        key["p"] = parseProfile(rowData["p"], "n" in key)
 
-                        if "rx" in key:
-                            key["x"] += key["rx"]
-                        if "ry2" in key:
-                            key["y"] = key["ry2"]
+                    # set the text on the key
+                    key["v"] = {}
+                    key["v"]["labels"] = reorderLabels(value.split('\n'), align)
+                    key["f"] = reorderSizes(key["f"], key["fa"], align)
+                    key["t"] = reorderColors(None, key["t"], align)
+                    key["v"]["raw"] = value
 
-                        # add the key to the current row
-                        keyboard["rows"][key["row"]].append(key)
-                        keyboard["keyCount"] += 1
+                    # set the row and column of the key
+                    key["row"] = rowNum
+                    key["col"] = pos
+                    # set x and y coordinates of key
+                    key["x"] = x
+                    key["y"] = rowData["y"]
+
+                    if "rx" in key:
+                        key["x"] += key["rx"]
+                    if "ry2" in key:
+                        key["y"] = key["ry2"]
+
+                    # add the key to the current row
+                    keyboard["rows"][key["row"]].append(key)
+                    keyboard["keyCount"] += 1
                     x += key["w"] + 0.05
             y += 1 + 0.05
             if "ry2" in key:
