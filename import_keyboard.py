@@ -182,12 +182,12 @@ def getKey(filePath):
     # add list of keyboard rows
     keyboard["rows"] = []
     keyboard["keyCount"] = 0
-    y = 0 + 0.05
+    y = 0
     # default align
     align = 4
     # iterate over rows
     for rowNum, row in enumerate(layout):
-        x = 0.05
+        x = 0
         # add empty row
         keyboard["rows"].append([])
         # check if item is a row or if it is a dict of keyboard properties
@@ -218,23 +218,21 @@ def getKey(filePath):
                             rowData["y"] += prev["y"]
                             y += prev["y"]
                         if "w" in prev:
-                            key["w"] = prev["w"] - 0.05
+                            key["w"] = prev["w"]
                         else:
-                            key["w"] = 1 - 0.05
+                            key["w"] = 1
                         if "h" in prev:
                             key["h"] = prev["h"]
                         else:
                             key["h"] = 1
-                        if key["h"] > 1:
-                            key["h"] += (int(key["h"])-1) * 0.05
                         if "x2" in prev:
                             key["x2"] = prev["x2"]
                         if "y2" in prev:
                             key["y2"] = prev["y2"]
                         if "w2" in prev:
-                            key["w2"] = prev["w2"] - 0.05
+                            key["w2"] = prev["w2"]
                         if "h2" in prev:
-                            key["h2"] = prev["h2"] - 0.05
+                            key["h2"] = prev["h2"]
                         if "l" in prev:
                             key["l"] = prev["l"]
                         if "n" in prev:
@@ -267,10 +265,30 @@ def getKey(filePath):
                         if "rx" in prev:
                             rowData["rx"] = prev["rx"]
                         if "ry" in prev:
-                            rowData["ry2"] = prev["ry"]
-                            rowData["ry"] = prev["ry"]
-                        elif "ry" in rowData and "r" in prev:
-                            rowData["ry2"] = rowData["ry"]
+                            if "yCoord" in rowData:
+                                rowData["ry"] = prev["ry"]
+                                rowData["y"] = prev["ry"] + rowData["yCoord"]
+                                y = prev["ry"] + rowData["yCoord"]
+                            else:
+                                rowData["ry"] = prev["ry"]
+                                rowData["y"] = prev["ry"]
+                                y = prev["ry"]
+                        elif "r" in prev and "ry" in rowData:
+                            if "yCoord" in rowData:
+                                rowData["y"] = rowData["ry"] + rowData["yCoord"]
+                                y = rowData["ry"] + rowData["yCoord"]
+                            else:
+                                rowData["y"] = rowData["ry"]
+                                y = rowData["ry"]
+                        elif "r" in prev:
+                            if "yCoord" in rowData:
+                                rowData["ry"] = 0
+                                rowData["y"] = rowData["yCoord"]
+                                y = rowData["yCoord"]
+                            else:
+                                rowData["ry"] = 0
+                                rowData["y"] = 0
+                                y = 0
 
                         # if rowData has property set then add it to key
                         if "a" in rowData:
@@ -280,7 +298,7 @@ def getKey(filePath):
                     else:
                         key["xCoord"] = 0
                         key["d"] = False
-                        key["w"] = 1 - 0.05
+                        key["w"] = 1
                         key["h"] = 1
 
                     # if rowData has property set then add it to key
@@ -312,11 +330,6 @@ def getKey(filePath):
                         key["rx"] = rowData["rx"]
                     if "ry" in rowData:
                         key["ry"] = rowData["ry"]
-                    if "ry2" in rowData:
-                        if "yCoord" in rowData:
-                            key["ry2"] = rowData["ry2"] + rowData["yCoord"]
-                        else:
-                            key["ry2"] = rowData["ry2"]
 
                     if "p" not in rowData:
                         key["p"] = fallbackProfile
@@ -339,16 +352,12 @@ def getKey(filePath):
 
                     if "rx" in key:
                         key["x"] += key["rx"]
-                    if "ry2" in key:
-                        key["y"] = key["ry2"]
 
                     # add the key to the current row
                     keyboard["rows"][key["row"]].append(key)
                     keyboard["keyCount"] += 1
-                    x += key["w"] + 0.05
-            y += 1 + 0.05
-            if "ry2" in key:
-                rowData["ry2"] += 1
+                    x += key["w"]
+            y += 1
         else:
             # if the current item is a dict then add the backcolor property to
             # the keyboard
@@ -484,7 +493,7 @@ def read(filepath):
 
         boxHeight = key["h"] - (alignLegendsProfile(
             key["p"])[1] + alignLegendsProfile(key["p"])[3])
-        boxWidth = key["w"] - 0.05 - (alignLegendsProfile(
+        boxWidth = key["w"] - (alignLegendsProfile(
             key["p"])[0] + alignLegendsProfile(key["p"])[2])
 
         new_label.data.text_boxes[0].width = boxWidth
@@ -578,6 +587,8 @@ def read(filepath):
         # iterate over keys in row
         for key in row:
             if key["d"] is False:
+                key["w"] -= 0.05
+                key["h"] -= 0.05
                 if key["c"] not in bpy.data.materials:
                     # new material for key
                     m = Material()
