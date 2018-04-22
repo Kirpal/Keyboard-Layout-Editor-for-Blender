@@ -388,7 +388,7 @@ def read(filepath):
                       "SA4TL", "SA4TM", "SA4TR", "SA4ML", "SA4MM", "SA4MR", "SA4BL", "SA4BM", "SA4BR",  # SA R4
                       "SASPACETL", "SASPACETM", "SASPACETR", "SASPACEML", "SASPACEMM", "SASPACEMR", "SASPACEBL", "SASPACEBM", "SASPACEBR",  # SA SPACE
                       "SATLF", "SATMF", "SATRF", "SAMLF", "SAMMF", "SAMRF", "SABLF", "SABMF", "SABRF", "SATLS", "SATMS", "SATRS", "SAMLS", "SAMMS", "SAMRS", "SABLS", "SABMS", "SABRS",
-                      "side", "switch", "led"]
+                      "case", "switch", "led"]
     # blender file with template objects
     templateBlend = os.path.join(os.path.dirname(
         __file__), "template.blend", "Object")
@@ -407,10 +407,6 @@ def read(filepath):
     keyboard_empty = bpy.data.objects.new("Keyboard_whole", None)
     keyboard_empty.location = (0, 0, 0)
     scn.objects.link(keyboard_empty)
-
-    # set width and height of keyboard
-    width = 0
-    height = 0
 
     # initialize font list with default font
     fonts = [gotham for i in range(0, 12)]
@@ -1147,19 +1143,12 @@ def read(filepath):
                 for obj in scn.objects:
                     obj.select = False
 
-                # set the keyboard width and height if it was smaller than the
-                # current width
-                if key["x"] + key["w"] + 0.05 > width:
-                    width = key["x"] + key["w"] + 0.05
-                if key["y"] + key["h"] + 0.05 > height:
-                    height = key["y"] + key["h"] + 0.05
-
             bpy.context.window_manager.progress_update(currentKey)
             currentKey += 1
 
     m = Material()
     m.set_cycles()
-    m.make_material("side")
+    m.make_material("case")
 
     diffuseBSDF = m.nodes['Diffuse BSDF']
 
@@ -1195,65 +1184,42 @@ def read(filepath):
     mp.link(diffuseBSDF, 'BSDF', mixShader, 2)
     mp.link(mixShader, 'Shader', materialOutput, 'Surface')
 
-    # create all the sides and the bottom of the case
-    side = bpy.data.objects['side']
-    side1 = side.copy()
-    side1.data = side.data.copy()
-    side1.animation_data_clear()
-    side1.active_material = bpy.data.materials["side"]
-    side2 = side.copy()
-    side2.data = side.data.copy()
-    side2.animation_data_clear()
-    side2.active_material = bpy.data.materials["side"]
-    side3 = side.copy()
-    side3.data = side.data.copy()
-    side3.animation_data_clear()
-    side3.active_material = bpy.data.materials["side"]
-    side4 = side.copy()
-    side4.data = side.data.copy()
-    side4.animation_data_clear()
-    side4.active_material = bpy.data.materials["side"]
-    side5 = side.copy()
-    side5.data = side.data.copy()
-    side5.animation_data_clear()
-    side5.active_material = bpy.data.materials["side"]
+    # get case height and width from generated keys
+    scn.objects.active = keyboard_empty
+    bpy.ops.object.select_grouped(type="CHILDREN_RECURSIVE")
+    bpy.ops.object.duplicate()
+    scn.objects.active = bpy.context.selected_objects[0]
+    bpy.ops.object.join()
+    bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
+    width = scn.objects.active.dimensions[0] + 0.5
+    height = scn.objects.active.dimensions[1] + 0.5
+    caseX = scn.objects.active.location[0]
+    caseY = scn.objects.active.location[1]
+    bpy.ops.object.delete(use_global=False)
+    
+    # create the case
+    caseTemplate = bpy.data.objects['case']
+    case = caseTemplate.copy()
+    case.data = caseTemplate.data.copy()
+    case.animation_data_clear()
 
-    # set case pieces size and location and add them to the scene
-    side1.location = (0.1, height / 2, 0)
-    side1.dimensions = (0.2, (height + 0.4), 1)
-    scn.objects.link(side1)
+    case.location = (caseX, caseY, -0.25)
+    case.dimensions = (width, height, 0.5)
 
-    side2.location = (width / -2, -0.1, 0)
-    side2.dimensions = (width, 0.2, 1)
-    scn.objects.link(side2)
+    scn.objects.link(case)
 
-    side3.location = ((width + 0.1) * -1, height / 2, 0)
-    side3.dimensions = (0.2, (height + 0.4), 1)
-    scn.objects.link(side3)
+    case.select = True
+    scn.objects.active = case
 
-    side4.location = (width / -2, (height + 0.1), 0)
-    side4.dimensions = (width, 0.2, 1)
-    scn.objects.link(side4)
-
-    side5.location = (width / -2, height / 2, -0.25)
-    side5.dimensions = (width, height, 0.5)
-    scn.objects.link(side5)
+    # name the case
+    case.name = "Case"
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
     # deselect everything
     for obj in scn.objects:
         obj.select = False
 
-    # select all case parts and join them together
-    side1.select = True
-    side2.select = True
-    side3.select = True
-    side4.select = True
-    side5.select = True
-    scn.objects.active = side5
-    bpy.ops.object.join()
-    # name the case
-    side5.name = "Case"
-
+    case.select = True
     scn.objects.active = keyboard_empty
     bpy.ops.object.parent_set(type="OBJECT")
 
@@ -1273,24 +1239,11 @@ def read(filepath):
     bpy.ops.object.transform_apply(location=True, scale=True, rotation=True)
     bpy.ops.object.delete(use_global=False)
 
-    side5.select = True
-    scn.objects.active = side5
+    case.select = True
+    scn.objects.active = case
     # bevel the corners
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.context.tool_settings.mesh_select_mode = (False, True, False)
-
-    bpy.ops.object.mode_set(mode='OBJECT')
-
-    side5.data.edges[24].select = True
-    side5.data.edges[26].select = True
-    side5.data.edges[53].select = True
-    side5.data.edges[56].select = True
-
-    bpy.ops.object.editmode_toggle()
-
-    bpy.ops.mesh.bevel(vertex_only=False, offset=0.033,
-                       offset_type='OFFSET', segments=5)
-    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.modifier_add(type="BEVEL")
+    bpy.ops.object.modifier_apply(modifier="Bevel")
 
     if "switchType" in keyboard:
         if keyboard["switchType"] == "MX1A-11xx" or keyboard["switchType"] == "KS-3-Black":
