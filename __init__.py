@@ -1,16 +1,16 @@
+import bpy
+
 # addon details
 bl_info = {
     "name": "Import: KLE Raw JSON format (.json)",
     "author": "/u/kdem007 /u/jacopods",
-    "version": (2, 8),
+    "version": (2, 9),
     "blender": (2, 79, 0),
     "location": "File > Import-Export > Keyboard Layout Editor Raw (.json) ",
     "description": "Import Keyboard Layouts",
     "warning": "",
     "category": "Import-Export",
 }
-
-import bpy
 
 # main addon class
 
