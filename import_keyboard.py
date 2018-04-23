@@ -1146,44 +1146,6 @@ def read(filepath):
             bpy.context.window_manager.progress_update(currentKey)
             currentKey += 1
 
-    m = Material()
-    m.set_cycles()
-    m.make_material("case")
-
-    diffuseBSDF = m.nodes['Diffuse BSDF']
-
-    # set case color if it is defined, otherwise set it to white
-    if "backcolor" in keyboard:
-        c = keyboard["backcolor"]
-        rgb = hex2rgb(c)
-        diffuseBSDF.inputs["Color"].default_value = [
-            rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
-    else:
-        diffuseBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
-
-    # make the case material
-    materialOutput = m.nodes['Material Output']
-    glossyBSDF = m.makeNode('ShaderNodeBsdfGlossy', 'Glossy BSDF')
-    glossyBSDF.inputs["Color"].default_value = [1, 1, 1, 1]
-    glossyBSDF.inputs["Roughness"].default_value = 0.6
-    mixShader = m.makeNode('ShaderNodeMixShader', 'Mix Shader')
-    mixShader.inputs['Fac'].default_value = 0.8
-    m.link(glossyBSDF, 'BSDF', mixShader, 1)
-    m.link(diffuseBSDF, 'BSDF', mixShader, 2)
-    m.link(mixShader, 'Shader', materialOutput, 'Surface')
-
-    mp = Material()
-    mp.set_cycles()
-    mp.make_material("plate")
-
-    # make the case material
-    materialOutput = mp.nodes['Material Output']
-    mixShader = mp.makeNode('ShaderNodeMixShader', 'Mix Shader')
-    mixShader.inputs['Fac'].default_value = 0.8
-    mp.link(glossyBSDF, 'BSDF', mixShader, 1)
-    mp.link(diffuseBSDF, 'BSDF', mixShader, 2)
-    mp.link(mixShader, 'Shader', materialOutput, 'Surface')
-
     # get case height and width from generated keys
     scn.objects.active = keyboard_empty
     bpy.ops.object.select_grouped(type="CHILDREN_RECURSIVE")
@@ -1210,6 +1172,14 @@ def read(filepath):
 
     case.select = True
     scn.objects.active = case
+
+    # set case color if it is defined, otherwise set it to white
+    if "backcolor" in keyboard:
+        c = keyboard["backcolor"]
+        rgb = hex2rgb(c)
+        bpy.data.materials["case"].node_tree.nodes["RGB"].outputs[0].default_value = [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
+    else:
+        bpy.data.materials["case"].node_tree.nodes["RGB"].outputs[0].default_value = [1, 1, 1, 1]
 
     # name the case
     case.name = "Case"
