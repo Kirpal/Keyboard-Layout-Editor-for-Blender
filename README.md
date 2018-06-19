@@ -19,6 +19,12 @@ Allows you to import keyboard layouts into blender and render them in 3d
 
 <sup>Courtesy of [/u/zzubnik](https://reddit.com/u/zzubnik)</sup>
 
+&nbsp;
+
+![Example 4](examples/4.jpg)
+
+<sup>Courtesy of [@kirpal](https://github.com/kirpal)</sup>
+
 *Please open a pull request if you'd like to add more examples*
 
 ### How to install Addon:
