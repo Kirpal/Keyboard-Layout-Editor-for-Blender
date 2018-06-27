@@ -583,8 +583,6 @@ def read(filepath):
         # iterate over keys in row
         for key in row:
             if key["d"] is False:
-                key["w"] -= 0.05
-                key["h"] -= 0.05
                 if key["c"] not in bpy.data.materials:
                     # new material for key
                     m = Material()
