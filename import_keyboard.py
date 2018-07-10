@@ -426,26 +426,26 @@ def read(filepath):
 
             selectors = filter(None, pair[0].split(","))
 
-            font = list(filter(lambda p: re.sub(
-                r"\s+", "", p.split(":")[0]) == "font-family", props))[-1]
-            font = re.sub(r"(\'|\")", "", font.split(":")[1]).strip()
+            fontProperty = list(filter(lambda p: re.sub(r"\s+", "", p.split(":")[0]) == "font-family", props))
+            if len(fontProperty) > 0:
+                font = re.sub(r"(\'|\")", "", fontProperty[-1].split(":")[1]).strip()
 
-            if font in googleFonts.keys():
-                tempDir = bpy.app.tempdir
-                urllib.request.urlretrieve(
-                    googleFonts[font], os.path.join(tempDir, font + ".ttf"))
-                font = bpy.data.fonts.load(
-                    os.path.join(tempDir, font + ".ttf"))
+                if font in googleFonts.keys():
+                    tempDir = bpy.app.tempdir
+                    urllib.request.urlretrieve(
+                        googleFonts[font], os.path.join(tempDir, font + ".ttf"))
+                    font = bpy.data.fonts.load(
+                        os.path.join(tempDir, font + ".ttf"))
 
-            else:
-                font = gotham
+                else:
+                    font = gotham
 
-            for selector in selectors:
-                if selector == "*":
-                    fonts = [font for i in range(0, 12)]
-                elif re.fullmatch(r".keylabel[0-9][1-2]?") and int(selector.replace(".keylabel", "")) >= 0 and int(selector.replace(".keylabel", "")) <= 11:
-                    fonts[int(selector.replace(
-                        ".keylabel", ""))] = font
+                for selector in selectors:
+                    if selector == "*":
+                        fonts = [font for i in range(0, 12)]
+                    elif re.fullmatch(r".keylabel[0-9][1-2]?") and int(selector.replace(".keylabel", "")) >= 0 and int(selector.replace(".keylabel", "")) <= 11:
+                        fonts[int(selector.replace(
+                            ".keylabel", ""))] = font
 
     bpy.context.window_manager.progress_begin(keyboard["keyCount"], 0)
     bpy.context.window.cursor_set("DEFAULT")
