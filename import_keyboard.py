@@ -76,18 +76,20 @@ def reorderLabels(labels, align):
     return ret
 
 
-def reorderSizes(default, individual, align):
-    ret = [default, default, default, default, default, default,
-           default, default, default, default, default, default]
+def reorderSizes(primary, secondary, individual, align):
+    if secondary is None:
+        secondary = primary
+    ret = [primary, secondary, secondary, secondary, secondary, secondary,
+         secondary, secondary, secondary, secondary, secondary, secondary]
     if individual:
         for pos, size in enumerate(individual):
             if size == 0:
-                ret[labelMap[align][pos]] = default
+                ret[labelMap[align][pos]] = primary
             else:
                 ret[labelMap[align][pos]] = size
     else:
-        ret = [default, default, default, default, default, default,
-               default, default, default, default, default, default]
+        ret = [primary, secondary, secondary, secondary, secondary, secondary,
+             secondary, secondary, secondary, secondary, secondary, secondary]
     return ret
 
 
@@ -225,6 +227,8 @@ def getKey(filePath):
                             key["h"] = prev["h"]
                         else:
                             key["h"] = 1
+                        if "fa" in prev:
+                            key["fa"] = prev["fa"]
                         if "x2" in prev:
                             key["x2"] = prev["x2"]
                         if "y2" in prev:
@@ -247,10 +251,6 @@ def getKey(filePath):
                             rowData["a"] = prev["a"]
                         if "f" in prev:
                             rowData["f"] = prev["f"]
-                        if "fa" in prev:
-                            rowData["fa"] = prev["fa"]
-                        else:
-                            rowData["fa"] = None
                         if "f2" in prev:
                             rowData["f2"] = prev["f2"]
                         if "p" in prev:
@@ -318,12 +318,10 @@ def getKey(filePath):
                         key["f"] = rowData["f"]
                     else:
                         key["f"] = 3
-                    if "fa" in rowData:
-                        key["fa"] = rowData["fa"]
-                    else:
-                        key["fa"] = None
                     if "f2" in rowData:
                         key["f2"] = rowData["f2"]
+                    else:
+                        key["f2"] = None
                     if "r" in rowData:
                         key["r"] = rowData["r"]
                     if "rx" in rowData:
@@ -336,10 +334,13 @@ def getKey(filePath):
                     else:
                         key["p"] = parseProfile(rowData["p"], "n" in key)
 
+                    if "fa" not in key:
+                        key["fa"] = None
+
                     # set the text on the key
                     key["v"] = {}
                     key["v"]["labels"] = reorderLabels(value.split('\n'), align)
-                    key["f"] = reorderSizes(key["f"], key["fa"], align)
+                    key["f"] = reorderSizes(key["f"], key["f2"], key["fa"], align)
                     key["t"] = reorderColors(None, key["t"], align)
                     key["v"]["raw"] = value
 
