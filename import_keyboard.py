@@ -444,7 +444,7 @@ def read(filepath):
                 for selector in selectors:
                     if selector == "*":
                         fonts = [font for i in range(0, 12)]
-                    elif re.fullmatch(r".keylabel[0-9][1-2]?") and int(selector.replace(".keylabel", "")) >= 0 and int(selector.replace(".keylabel", "")) <= 11:
+                    elif re.fullmatch(r".keylabel[0-9][1-2]?", selector) and int(selector.replace(".keylabel", "")) >= 0 and int(selector.replace(".keylabel", "")) <= 11:
                         fonts[int(selector.replace(
                             ".keylabel", ""))] = font
 
