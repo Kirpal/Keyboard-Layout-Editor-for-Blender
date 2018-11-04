@@ -4,7 +4,7 @@ import bpy
 bl_info = {
     "name": "Import: KLE Raw JSON format (.json)",
     "author": "/u/kdem007 /u/jacopods",
-    "version": (2, 12),
+    "version": (2, 13),
     "blender": (2, 79, 0),
     "location": "File > Import-Export > Keyboard Layout Editor Raw (.json) ",
     "description": "Import Keyboard Layouts",
