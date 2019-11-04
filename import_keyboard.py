@@ -15,22 +15,13 @@ import urllib.request
 import os
 import re
 from math import pi
+from . import parse_json
+from . import add_label
+from . import helpers
 try:
     from HTMLParser import HTMLParser
 except ImportError:
     from html.parser import HTMLParser
-
-labelMap = [
-    # 0  1  2  3  4  5  6  7  8  9 10 11   // align flags
-    [0, 6, 2, 8, 9, 11, 3, 5, 1, 4, 7, 10],  # 0 = no centering
-    [1, 7, -1, -1, 9, 11, 4, -1, -1, -1, -1, 10],  # 1 = center x
-    [3, -1, 5, -1, 9, 11, -1, -1, 4, -1, -1, 10],  # 2 = center y
-    [4, -1, -1, -1, 9, 11, -1, -1, -1, -1, -1, 10],  # 3 = center x & y
-    [0, 6, 2, 8, 10, -1, 3, 5, 1, 4, 7, -1],  # 4 = center front (default)
-    [1, 7, -1, -1, 10, -1, 4, -1, -1, -1, -1, -1],  # 5 = center front & x
-    [3, -1, 5, -1, 10, -1, -1, -1, 4, -1, -1, -1],  # 6 = center front & y
-    [4, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1],  # 7 = center front & x & y
-]
 
 gotham = bpy.data.fonts.load(os.path.join(os.path.dirname(
     __file__), "gotham.ttf"))
@@ -42,76 +33,8 @@ fonts = [None for i in range(0, 12)]
 googleFonts = json.load(open(os.path.join(os.path.dirname(
     __file__), "fonts.json")))
 
-# Function to parse profiles
-fallbackProfile = "DCS"
-
-
-def parseProfile(profileString, homing):
-    ret = profileString.upper().replace("R", "").replace("0", "").replace("5", "").replace(
-        "6", "").replace("7", "").replace("8", "").replace("9", "").replace(" ", "")
-
-    if ret != "SASPACE":
-        ret = ret.replace("SPACE", "")
-
-    # Normalize unsculpted SA profile to SA ROW 3
-    if ret == "SA":
-        ret = "SA3"
-
-    if ret == "" or ret not in ["DSA", "DCS", "SA1", "SA2", "SA3", "SA4", "SASPACE"]:
-        ret = fallbackProfile
-
-    # Set homing profile for supported profiles (currently only SA)
-    if homing and ret in ["SA1", "SA2", "SA3", "SA4"]:
-        ret = "SA3D"
-
-    return ret
-
-# Function to parse legends
-
-
-def reorderLabels(labels, align):
-    ret = ["", "", "", "", "", "", "", "", "", "", "", ""]
-    for pos, label in enumerate(labels):
-        ret[labelMap[align][pos]] = label
-    return ret
-
-
-def reorderSizes(primary, secondary, individual, align):
-    if secondary is None:
-        secondary = primary
-    ret = [primary, secondary, secondary, secondary, secondary, secondary,
-         secondary, secondary, secondary, secondary, secondary, secondary]
-    if individual:
-        for pos, size in enumerate(individual):
-            if size == 0:
-                ret[labelMap[align][pos]] = primary
-            else:
-                ret[labelMap[align][pos]] = size
-    else:
-        ret = [primary, secondary, secondary, secondary, secondary, secondary,
-             secondary, secondary, secondary, secondary, secondary, secondary]
-    return ret
-
-
-def reorderColors(default, colors, align):
-    ret = [default, default, default, default, default, default,
-           default, default, default, default, default, default]
-
-    individual = colors.split('\n')
-
-    if len(individual) > 1:
-        for pos, color in enumerate(individual):
-            if color is not None and color is not '':
-                ret[labelMap[align][pos]] = color
-    else:
-        ret = [individual[0], individual[0], individual[0], individual[0], individual[0], individual[
-            0], individual[0], individual[0], individual[0], individual[0], individual[0], individual[0]]
-    return ret
-
-# convert HEX color to RGB
-
-
 def hex2rgb(hex):
+    """Convert HEX color to RGB"""
     hex = hex.lstrip("#")
 
     if len(hex) == 3:
@@ -127,10 +50,8 @@ def hex2rgb(hex):
 
     return rgb
 
-# Make and modify materials
-
-
 class Material:
+    """Make and modify materials"""
 
     def set_cycles(self):
         scn = bpy.context.scene
@@ -171,212 +92,11 @@ class Material:
         self.xpos = 0
         self.ypos = 0
 
-# parses KLE Raw JSON into dict
-
-
-def getKey(filePath):
-    # load JSON file
-    layout = json.load(open(filePath, encoding="UTF-8",
-                            errors="replace"), strict=False)
-    # make empty keyboard dict
-    keyboard = {}
-    rowData = {}
-    # add list of keyboard rows
-    keyboard["rows"] = []
-    keyboard["keyCount"] = 0
-    y = 0
-    # default align
-    align = 4
-    # iterate over rows
-    for rowNum, row in enumerate(layout):
-        x = 0
-        # add empty row
-        keyboard["rows"].append([])
-        # check if item is a row or if it is a dict of keyboard properties
-        if type(row) != dict:
-            # get row data from previous row
-            rowData = rowData
-            rowData["y"] = y
-            # iterate over keys in row
-            for pos, value in enumerate(row):
-                # check if item is a key or dict of key properties
-                if type(value) == str:
-                    # key is a dict with all the key's properties
-                    key = {}
-                    # if the previous item is a dict add the data to the rest
-                    # of the row, or the current key, depending on what the
-                    # property is
-                    if type(row[pos - 1]) == dict:
-                        # prev is the previous item in the row
-                        prev = row[pos - 1]
-                        # if prev has property set then add it to key
-                        if "x" in prev:
-                            key["xCoord"] = prev["x"]
-                            x += key["xCoord"]
-                        else:
-                            key["xCoord"] = 0
-                        if "y" in prev:
-                            rowData["yCoord"] = prev["y"]
-                            rowData["y"] += prev["y"]
-                            y += prev["y"]
-                        if "w" in prev:
-                            key["w"] = prev["w"]
-                        else:
-                            key["w"] = 1
-                        if "h" in prev:
-                            key["h"] = prev["h"]
-                        else:
-                            key["h"] = 1
-                        if "fa" in prev:
-                            key["fa"] = prev["fa"]
-                        if "x2" in prev:
-                            key["x2"] = prev["x2"]
-                        if "y2" in prev:
-                            key["y2"] = prev["y2"]
-                        if "w2" in prev:
-                            key["w2"] = prev["w2"]
-                        if "h2" in prev:
-                            key["h2"] = prev["h2"]
-                        if "l" in prev:
-                            key["l"] = prev["l"]
-                        if "n" in prev:
-                            key["n"] = prev["n"]
-                        if "c" in prev:
-                            rowData["c"] = prev["c"]
-                        if "t" in prev:
-                            rowData["t"] = prev["t"]
-                        if "g" in prev:
-                            rowData["g"] = prev["g"]
-                        if "a" in prev:
-                            rowData["a"] = prev["a"]
-                        if "f" in prev:
-                            rowData["f"] = prev["f"]
-                        if "f2" in prev:
-                            rowData["f2"] = prev["f2"]
-                        if "p" in prev:
-                            rowData["p"] = prev["p"]
-                        if "d" in prev:
-                            key["d"] = prev["d"]
-                        else:
-                            key["d"] = False
-                        if "r" in prev:
-                            rowData["r"] = prev["r"]
-                            rowData["rRow"] = 0
-                        if "rx" in prev:
-                            rowData["rx"] = prev["rx"]
-                        if "ry" in prev:
-                            if "yCoord" in rowData:
-                                rowData["ry"] = prev["ry"]
-                                rowData["y"] = prev["ry"] + rowData["yCoord"]
-                                y = prev["ry"] + rowData["yCoord"]
-                            else:
-                                rowData["ry"] = prev["ry"]
-                                rowData["y"] = prev["ry"]
-                                y = prev["ry"]
-                        elif "r" in prev and "ry" in rowData:
-                            if "yCoord" in rowData:
-                                rowData["y"] = rowData["ry"] + rowData["yCoord"]
-                                y = rowData["ry"] + rowData["yCoord"]
-                            else:
-                                rowData["y"] = rowData["ry"]
-                                y = rowData["ry"]
-                        elif "r" in prev:
-                            if "yCoord" in rowData:
-                                rowData["ry"] = 0
-                                rowData["y"] = rowData["yCoord"]
-                                y = rowData["yCoord"]
-                            else:
-                                rowData["ry"] = 0
-                                rowData["y"] = 0
-                                y = 0
-
-                        # if rowData has property set then add it to key
-                        if "a" in rowData:
-                            align = rowData["a"]
-
-                    # if the previous item isn't a dict
-                    else:
-                        key["xCoord"] = 0
-                        key["d"] = False
-                        key["w"] = 1
-                        key["h"] = 1
-
-                    # if rowData has property set then add it to key
-                    if "c" in rowData:
-                        key["c"] = rowData["c"]
-                    else:
-                        key["c"] = "#cccccc"
-                    if "t" in rowData:
-                        key["t"] = rowData["t"]
-                    else:
-                        key["t"] = "#111111"
-                    if "g" in rowData:
-                        key["g"] = rowData["g"]
-                    if "a" in rowData:
-                        key["a"] = rowData["a"]
-                    if "f" in rowData:
-                        key["f"] = rowData["f"]
-                    else:
-                        key["f"] = 3
-                    if "f2" in rowData:
-                        key["f2"] = rowData["f2"]
-                    else:
-                        key["f2"] = None
-                    if "r" in rowData:
-                        key["r"] = rowData["r"]
-                    if "rx" in rowData:
-                        key["rx"] = rowData["rx"]
-                    if "ry" in rowData:
-                        key["ry"] = rowData["ry"]
-
-                    if "p" not in rowData:
-                        key["p"] = fallbackProfile
-                    else:
-                        key["p"] = parseProfile(rowData["p"], "n" in key)
-
-                    if "fa" not in key:
-                        key["fa"] = None
-
-                    # set the text on the key
-                    key["v"] = {}
-                    key["v"]["labels"] = reorderLabels(value.split('\n'), align)
-                    key["f"] = reorderSizes(key["f"], key["f2"], key["fa"], align)
-                    key["t"] = reorderColors(None, key["t"], align)
-                    key["v"]["raw"] = value
-
-                    # set the row and column of the key
-                    key["row"] = rowNum
-                    key["col"] = pos
-                    # set x and y coordinates of key
-                    key["x"] = x
-                    key["y"] = rowData["y"]
-
-                    if "rx" in key:
-                        key["x"] += key["rx"]
-
-                    # add the key to the current row
-                    keyboard["rows"][key["row"]].append(key)
-                    keyboard["keyCount"] += 1
-                    x += key["w"]
-            y += 1
-        else:
-            # if the current item is a dict then add the backcolor property to
-            # the keyboard
-            if "backcolor" in row:
-                keyboard["backcolor"] = row["backcolor"]
-            if "switchType" in row:
-                keyboard["switchType"] = row["switchType"]
-            if "led" in row:
-                keyboard["led"] = row["led"]
-            if "css" in row:
-                keyboard["css"] = row["css"]
-    return keyboard
-
 
 def read(filepath):
     bpy.context.window.cursor_set("WAIT")
     # parse raw data into dict
-    keyboard = getKey(filepath)
+    keyboard = parse_json.load(filepath)
 
     # template objects that have to be appended in and then deleted at the end
 
@@ -400,14 +120,18 @@ def read(filepath):
                           directory=templateBlend, filename=key)
 
     # get the current scene and change display device so colors are accurate
-    scn = bpy.context.scene
+    context = bpy.context
+    scn = context.scene
     scn.display_settings.display_device = "None"
 
-    bpy.ops.group.create(name="Keyboard")
+    if hasattr(bpy.data, "collections"):
+        bpy.ops.collection.create(name="Keyboard")
+    else:
+        bpy.ops.group.create(name="Keyboard")
 
     keyboard_empty = bpy.data.objects.new("Keyboard_whole", None)
     keyboard_empty.location = (0, 0, 0)
-    scn.objects.link(keyboard_empty)
+    helpers.add_object(scn, keyboard_empty)
 
     # initialize font list with default font
     fonts = [gotham for i in range(0, 12)]
@@ -452,133 +176,6 @@ def read(filepath):
     bpy.context.window.cursor_set("DEFAULT")
     currentKey = 0
 
-# adjust legends based on keycap type
-    def alignLegendsProfile(p):
-        return {
-            "DCS": [0.25, 0.15, 0.25, 0.325],
-            "DSA": [0.2, 0.25, 0.2, 0.25],
-            "SA1": [0.2, 0.23, 0.2, 0.20],
-            "SA2": [0.2, 0.23, 0.2, 0.23],
-            "SA3": [0.2, 0.23, 0.2, 0.23],
-            "SA3D": [0.2, 0.23, 0.2, 0.23],
-            "SA4": [0.2, 0.23, 0.2, 0.23]
-        }.get(p, [0.25, 0.15, 0.25, 0.325])
-
-# add text to keys
-    def addText(font, offset=0.0005):
-        # add text
-        new_label = bpy.data.curves.new(
-            type="FONT", name="keylabel")
-        new_label = bpy.data.objects.new(
-            "label", new_label)
-        label_text = re.sub(
-            "<br ?/?>", "\n", HTMLParser().unescape(key["v"]["labels"][pos]))
-        new_label.data.body = label_text
-
-        new_label.data.font = font
-        new_label.data.size = key["f"][pos] / 15
-
-        # Here are some computations for the clipping boxes
-        boxTop = key["y"] + \
-            alignLegendsProfile(key["p"])[1]
-        boxLeft = -1 * key["x"] - \
-            alignLegendsProfile(key["p"])[0]
-
-        label_verticalCorrection = - \
-            0.1 if label_text in [
-                ",", ";", ".", "[", "]"] else 0
-
-        boxHeight = key["h"] - (alignLegendsProfile(
-            key["p"])[1] + alignLegendsProfile(key["p"])[3])
-        boxWidth = key["w"] - (alignLegendsProfile(
-            key["p"])[0] + alignLegendsProfile(key["p"])[2])
-
-        new_label.data.text_boxes[0].width = boxWidth
-        new_label.data.text_boxes[0].height = boxHeight + \
-            label_verticalCorrection * new_label.data.size
-
-        new_label.data.text_boxes[0].y = -1 * (
-            key["f"][pos] / 15) * legendVerticalCorrection[pos]
-        new_label.data.align_x = alignText[pos][0]
-        new_label.data.align_y = alignText[pos][1]
-
-        new_label.data.extrude = 0.01
-
-        new_label.location = [boxLeft, boxTop, 2]
-        new_label.rotation_euler[2] = pi
-
-        scn.objects.link(new_label)
-        scn.update()
-
-        # deselect everything
-        for obj in scn.objects:
-            obj.select = False
-
-        new_label.select = True
-        scn.objects.active = new_label
-
-        new_label.to_mesh(scn, True, "PREVIEW")
-        if legendLed:
-            new_label.active_material = bpy.data.materials["led: %s" %
-                                                            key["t"][pos]]
-        else:
-            new_label.active_material = bpy.data.materials[key["t"][pos]]
-        bpy.ops.object.convert(target='MESH')
-        scn.objects.active = new_label
-
-        if key["f"][pos] > 6:
-            bpy.ops.object.modifier_add(type='REMESH')
-            new_label.modifiers["Remesh"].octree_depth = (4 if len(label_text) == 1 else 7)
-            new_label.modifiers["Remesh"].use_remove_disconnected = False
-            bpy.ops.object.modifier_apply(
-                apply_as='DATA', modifier="Remesh")
-
-        bpy.ops.object.modifier_add(type='SHRINKWRAP')
-        new_label.modifiers["Shrinkwrap"].offset = offset
-        new_label.modifiers["Shrinkwrap"].wrap_method = 'PROJECT'
-        new_label.modifiers[
-            "Shrinkwrap"].use_project_z = True
-        new_label.modifiers[
-            "Shrinkwrap"].use_positive_direction = True
-        new_label.modifiers[
-            "Shrinkwrap"].use_negative_direction = True
-        new_label.modifiers[
-            "Shrinkwrap"].target = new_obj_tl
-        bpy.ops.object.modifier_apply(
-            apply_as='DATA', modifier="Shrinkwrap")
-
-        # create clipping cube
-        bpy.ops.mesh.primitive_cube_add(
-            location=(boxLeft-boxWidth*0.5, boxTop+boxHeight*0.5, 1))
-        cube = bpy.context.object
-        cube.scale[0] = 0.5*boxWidth
-        cube.scale[1] = 0.5*boxHeight
-        cube.name = 'clipCube'
-
-        new_label.select = True
-        scn.objects.active = new_label
-
-        bpy.ops.object.modifier_add(type='BOOLEAN')
-        bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
-        bpy.context.object.modifiers["Boolean"].object = cube
-        bpy.ops.object.modifier_apply(
-            apply_as='DATA', modifier="Boolean")
-        bpy.data.objects.remove(cube, True)
-
-        for edge in bpy.context.object.data.edges:
-            edge.crease = 1
-
-        new_label.location[2] += cap_thickness
-
-        # deselect everything
-        for obj in scn.objects:
-            obj.select = False
-
-        new_label.select = True
-        new_obj_tl.select = True
-        scn.objects.active = new_obj_tl
-        bpy.ops.object.join()
-
     # iterate over rows in keyboard
     for row in keyboard["rows"]:
         # iterate over keys in row
@@ -591,7 +188,8 @@ def read(filepath):
                     m.make_material(key["c"])
 
                     # make new diffuse node
-                    diffuseBSDF = m.nodes['Diffuse BSDF']
+                    diffuseBSDF = m.makeNode(
+                        'ShaderNodeBsdfDiffuse', 'Diffuse BSDF')
 
                     # convert key color to rgb and set material to that
                     rgb = hex2rgb(key["c"])
@@ -785,31 +383,29 @@ def read(filepath):
                     new_obj_enter_br.active_material = bpy.data.materials[key["c"]]
 
                     # add outcropping to scene
-                    scn.objects.link(new_obj_enter_tl)
-                    scn.objects.link(new_obj_enter_tm)
-                    scn.objects.link(new_obj_enter_tr)
-                    scn.objects.link(new_obj_enter_ml)
-                    scn.objects.link(new_obj_enter_mm)
-                    scn.objects.link(new_obj_enter_mr)
-                    scn.objects.link(new_obj_enter_bl)
-                    scn.objects.link(new_obj_enter_bm)
-                    scn.objects.link(new_obj_enter_br)
+                    helpers.add_object(scn, new_obj_enter_tl)
+                    helpers.add_object(scn, new_obj_enter_tm)
+                    helpers.add_object(scn, new_obj_enter_tr)
+                    helpers.add_object(scn, new_obj_enter_ml)
+                    helpers.add_object(scn, new_obj_enter_mm)
+                    helpers.add_object(scn, new_obj_enter_mr)
+                    helpers.add_object(scn, new_obj_enter_bl)
+                    helpers.add_object(scn, new_obj_enter_bm)
+                    helpers.add_object(scn, new_obj_enter_br)
 
-                    # deselect everything
-                    for obj in scn.objects:
-                        obj.select = False
+                    helpers.unselect_all(scn)
 
                     # combine all the pieces
-                    new_obj_enter_tl.select = True
-                    new_obj_enter_tm.select = True
-                    new_obj_enter_tr.select = True
-                    new_obj_enter_ml.select = True
-                    new_obj_enter_mm.select = True
-                    new_obj_enter_mr.select = True
-                    new_obj_enter_bl.select = True
-                    new_obj_enter_bm.select = True
-                    new_obj_enter_br.select = True
-                    scn.objects.active = new_obj_enter_mm
+                    helpers.select_object(new_obj_enter_tl)
+                    helpers.select_object(new_obj_enter_tm)
+                    helpers.select_object(new_obj_enter_tr)
+                    helpers.select_object(new_obj_enter_ml)
+                    helpers.select_object(new_obj_enter_mm)
+                    helpers.select_object(new_obj_enter_mr)
+                    helpers.select_object(new_obj_enter_bl)
+                    helpers.select_object(new_obj_enter_bm)
+                    helpers.select_object(new_obj_enter_br)
+                    helpers.set_active_object(context, new_obj_enter_mm)
                     bpy.ops.object.join()
 
                 else:
@@ -927,46 +523,45 @@ def read(filepath):
                 new_obj_br.active_material = bpy.data.materials[key["c"]]
 
                 # add key to scene
-                scn.objects.link(new_obj_tl)
+                helpers.add_object(scn, new_obj_tl)
                 if middlew_needed:
-                    scn.objects.link(new_obj_tm)
-                scn.objects.link(new_obj_tr)
+                    helpers.add_object(scn, new_obj_tm)
+                helpers.add_object(scn, new_obj_tr)
 
                 if middleh_needed:
-                    scn.objects.link(new_obj_ml)
+                    helpers.add_object(scn, new_obj_ml)
                     if middlew_needed:
-                        scn.objects.link(new_obj_mm)
-                    scn.objects.link(new_obj_mr)
+                        helpers.add_object(scn, new_obj_mm)
+                    helpers.add_object(scn, new_obj_mr)
 
-                scn.objects.link(new_obj_bl)
+                helpers.add_object(scn, new_obj_bl)
                 if middlew_needed:
-                    scn.objects.link(new_obj_bm)
-                scn.objects.link(new_obj_br)
+                    helpers.add_object(scn, new_obj_bm)
+                helpers.add_object(scn, new_obj_br)
 
-                # deselect everything
-                for obj in scn.objects:
-                    obj.select = False
+                helpers.unselect_all(scn)
 
                 # combine all the pieces
-                new_obj_tl.select = True
+                helpers.select_object(new_obj_tl)
                 if middlew_needed:
-                    new_obj_tm.select = True
-                new_obj_tr.select = True
+                    helpers.select_object(new_obj_tm)
+                helpers.select_object(new_obj_tr)
 
                 if middleh_needed:
-                    new_obj_ml.select = True
+                    helpers.select_object(new_obj_ml)
                     if middlew_needed:
-                        new_obj_mm.select = True
-                    new_obj_mr.select = True
+                        helpers.select_object(new_obj_mm)
+                    helpers.select_object(new_obj_mr)
 
-                new_obj_bl.select = True
+                helpers.select_object(new_obj_bl)
                 if middlew_needed:
-                    new_obj_bm.select = True
-                new_obj_br.select = True
+                    helpers.select_object(new_obj_bm)
+                helpers.select_object(new_obj_br)
                 # if outcropping exists add it to the key
                 if new_obj_enter_mm is not None:
-                    new_obj_enter_mm.select = True
-                scn.objects.active = new_obj_tl
+                    helpers.select_object(new_obj_enter_mm)
+                helpers.set_active_object(context, new_obj_tl)
+                bpy.ops.object.mode_set(mode='OBJECT')
                 bpy.ops.object.join()
 
                 bpy.ops.object.mode_set(mode='EDIT')
@@ -989,7 +584,7 @@ def read(filepath):
                 new_switch.animation_data_clear()
                 new_switch.location[0] = (key["x"]) * -1 - (key["w"]) / 2
                 new_switch.location[1] = key["y"] + key["h"] / 2
-                scn.objects.link(new_switch)
+                helpers.add_object(scn, new_switch)
                 new_switch.name = "switch: %s-%s" % (key["row"], key["col"])
 
                 if "led" in keyboard:
@@ -999,21 +594,21 @@ def read(filepath):
                     new_led.animation_data_clear()
                     new_led.location[0] = (key["x"]) * -1 - (key["w"]) / 2
                     new_led.location[1] = key["y"] + key["h"] / 2
-                    scn.objects.link(new_led)
+                    helpers.add_object(scn, new_led)
                     new_led.name = "led: %s-%s" % (key["row"], key["col"])
 
                 for pos, label in enumerate(key["v"]["labels"]):
                     # make sure it's not a front legend
                     if pos < 9:
-                        legendLed = False
+                        labelMaterial = key["t"][pos]
                         if label != "":
-                            if "led" in keyboard and hex2rgb(key["t"][pos]) == keyboard["led"][:3]:
-                                legendLed = True
-                                if "led: %s" % key["t"][pos] not in bpy.data.materials:
+                            if "led" in keyboard and hex2rgb(labelMaterial) == keyboard["led"][:3]:
+                                labelMaterial = "led: %s" % labelMaterial
+                                if labelMaterial not in bpy.data.materials:
                                     # new material for legend
                                     m = Material()
                                     m.set_cycles()
-                                    m.make_material("led: %s" % key["t"][pos])
+                                    m.make_material(labelMaterial)
                                     # make new emission node
                                     emission = m.makeNode(
                                         'ShaderNodeEmission', 'Emission')
@@ -1028,15 +623,16 @@ def read(filepath):
                                     # attach emission to material output
                                     m.link(emission, 'Emission',
                                         materialOutput, 'Surface')
-                            elif key["t"][pos] not in bpy.data.materials:
+                            elif labelMaterial not in bpy.data.materials:
                                 # new material for legend
                                 m = Material()
                                 m.set_cycles()
-                                m.make_material(key["t"][pos])
+                                m.make_material(labelMaterial)
                                 # make new diffuse node
-                                diffuseBSDF = m.nodes['Diffuse BSDF']
+                                diffuseBSDF = m.makeNode(
+                                    'ShaderNodeBsdfDiffuse', 'Diffuse BSDF')
                                 # convert hex to rgb
-                                rgb = hex2rgb(key["t"][pos])
+                                rgb = hex2rgb(labelMaterial)
                                 diffuseBSDF.inputs["Color"].default_value = [
                                     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1]
 
@@ -1063,33 +659,33 @@ def read(filepath):
                                 m.link(mixShader, 'Shader',
                                     materialOutput, 'Surface')
 
-                            # This requires an explanation: Blender text vertival alignment accounts for line spacing, which is apparently set to ~1/.6
-                            # when aligning at top one
-                            legendVerticalCorrection = [
-                                0.6, 0.6, 0.6,
-                                0.8, 0.8, 0.8,
-                                1.0, 1.0, 1.0,
-                                1.0, 1.0, 1.0
-                            ]
-
-                            alignText = [
-                                ["LEFT", "TOP"],
-                                ["CENTER", "TOP"],
-                                ["RIGHT", "TOP"],
-                                ["LEFT", "CENTER"],
-                                ["CENTER", "CENTER"],
-                                ["RIGHT", "CENTER"],
-                                ["LEFT", "BOTTOM"],
-                                ["CENTER", "BOTTOM"],
-                                ["RIGHT", "BOTTOM"]
-                            ]
-
-                            cap_thickness = 0.001
-
                             try:
-                                addText(fonts[pos])
+                                add_label.add(
+                                    key["v"]["labels"][pos],
+                                    fonts[pos],
+                                    key["p"],
+                                    pos,
+                                    labelMaterial,
+                                    key["f"][pos],
+                                    key["x"],
+                                    key["y"],
+                                    key["w"],
+                                    key["h"],
+                                    new_obj_tl)
                             except AttributeError:
-                                addText(noto, 0.0001)
+                                add_label.add(
+                                    key["v"]["labels"][pos],
+                                    noto,
+                                    key["p"],
+                                    pos,
+                                    labelMaterial,
+                                    key["f"][pos],
+                                    key["x"],
+                                    key["y"],
+                                    key["w"],
+                                    key["h"],
+                                    new_obj_tl,
+                                    0.0001)
 
                 # rotate key
                 if "r" in key:
@@ -1100,62 +696,60 @@ def read(filepath):
 
                     empty = bpy.data.objects.new("rotate", None)
                     empty.location = (key["rx"] * -1, key["ry"], 0.3)
-                    scn.objects.link(empty)
+                    helpers.add_object(scn, empty)
 
-                    # deselect everything
-                    for obj in scn.objects:
-                        obj.select = False
+                    helpers.unselect_all(scn)
 
-                    empty.select = True
-                    new_obj_tl.select = True
-                    new_switch.select = True
+                    helpers.select_object(empty)
+                    helpers.select_object(new_obj_tl)
+                    helpers.select_object(new_switch)
 
-                    scn.objects.active = empty
+                    helpers.set_active_object(context, empty)
                     bpy.ops.object.parent_set(type="OBJECT")
 
                     empty.rotation_euler[2] = pi * (key["r"] * -1) / 180
 
-                    # deselect everything
-                    for obj in scn.objects:
-                        obj.select = False
+                    helpers.unselect_all(scn)
 
-                    new_obj_tl.select = True
+                    helpers.select_object(new_obj_tl)
                     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-                    new_switch.select = True
+                    helpers.select_object(new_switch)
                     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
 
-                    # deselect everything
-                    for obj in scn.objects:
-                        obj.select = False
+                    helpers.unselect_all(scn)
 
-                    empty.select = True
+                    helpers.select_object(empty)
                     bpy.ops.object.delete(use_global=False)
 
-                new_obj_tl.select = True
-                new_switch.select = True
+                helpers.select_object(new_obj_tl)
+                helpers.select_object(new_switch)
                 if "led" in keyboard:
-                    new_led.select = True
-                scn.objects.active = keyboard_empty
+                    helpers.select_object(new_led)
+                helpers.set_active_object(context, keyboard_empty)
                 bpy.ops.object.parent_set(type="OBJECT")
 
-                # deselect everything
-                for obj in scn.objects:
-                    obj.select = False
+                helpers.unselect_all(scn)
 
             bpy.context.window_manager.progress_update(currentKey)
             currentKey += 1
 
     # get case height and width from generated keys
-    scn.objects.active = keyboard_empty
+    helpers.set_active_object(context, keyboard_empty)
     bpy.ops.object.select_grouped(type="CHILDREN_RECURSIVE")
     bpy.ops.object.duplicate()
-    scn.objects.active = bpy.context.selected_objects[0]
+    helpers.set_active_object(context, bpy.context.selected_objects[0])
     bpy.ops.object.join()
     bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
-    width = scn.objects.active.dimensions[0] + 0.5
-    height = scn.objects.active.dimensions[1] + 0.5
-    caseX = scn.objects.active.location[0]
-    caseY = scn.objects.active.location[1]
+    if hasattr(context, "view_layer"):
+        width = context.view_layer.objects.active.dimensions[0] + 0.5
+        height = context.view_layer.objects.active.dimensions[1] + 0.5
+        caseX = context.view_layer.objects.active.location[0]
+        caseY = context.view_layer.objects.active.location[1]
+    else:
+        width = scn.objects.active.dimensions[0] + 0.5
+        height = scn.objects.active.dimensions[1] + 0.5
+        caseX = scn.objects.active.location[0]
+        caseY = scn.objects.active.location[1]
     bpy.ops.object.delete(use_global=False)
     
     # create the case
@@ -1167,10 +761,10 @@ def read(filepath):
     case.location = (caseX, caseY, -0.25)
     case.dimensions = (width, height, 0.5)
 
-    scn.objects.link(case)
+    helpers.add_object(scn, case)
 
-    case.select = True
-    scn.objects.active = case
+    helpers.select_object(case)
+    helpers.set_active_object(context, case)
 
     # set case color if it is defined, otherwise set it to white
     if "backcolor" in keyboard:
@@ -1184,12 +778,10 @@ def read(filepath):
     case.name = "Case"
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
-    # deselect everything
-    for obj in scn.objects:
-        obj.select = False
+    helpers.unselect_all(scn)
 
-    case.select = True
-    scn.objects.active = keyboard_empty
+    helpers.select_object(case)
+    helpers.set_active_object(context, keyboard_empty)
     bpy.ops.object.parent_set(type="OBJECT")
 
     # This assumes 1 blender unit = 10cm
@@ -1199,17 +791,15 @@ def read(filepath):
     keyboard_empty.location = (-blender_scaling*width*0.5,
                                blender_scaling*height*0.5, blender_scaling*0.5)
 
-    # deselect everything
-    for obj in scn.objects:
-        obj.select = False
+    helpers.unselect_all(scn)
 
-    keyboard_empty.select = True
-    scn.objects.active = keyboard_empty
+    helpers.select_object(keyboard_empty)
+    helpers.set_active_object(context, keyboard_empty)
     bpy.ops.object.transform_apply(location=True, scale=True, rotation=True)
     bpy.ops.object.delete(use_global=False)
 
-    case.select = True
-    scn.objects.active = case
+    helpers.select_object(case)
+    helpers.set_active_object(context, case)
     # bevel the corners
     bpy.ops.object.modifier_add(type="BEVEL")
     bpy.ops.object.modifier_apply(modifier="Bevel")
@@ -1243,13 +833,11 @@ def read(filepath):
         bpy.data.materials["led"].node_tree.nodes["Emission"].inputs[
             "Strength"].default_value = keyboard["led"][3] * 5
 
-    # deselect everything
-    for obj in scn.objects:
-        obj.select = False
+    helpers.unselect_all(scn)
 
     # remove all the template objects
     for object in defaultObjects:
-        bpy.data.objects[object].select = True
+        helpers.select_object(bpy.data.objects[object])
     bpy.ops.object.delete()
 
     bpy.context.window_manager.progress_end()

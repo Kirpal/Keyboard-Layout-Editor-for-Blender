@@ -1,18 +1,15 @@
 import bpy
 
-# addon details
 bl_info = {
     "name": "Import: KLE Raw JSON format (.json)",
-    "author": "/u/kdem007 /u/jacopods",
-    "version": (2, 13),
-    "blender": (2, 79, 0),
+    "author": "Kirpal Demian",
+    "version": (3, 0),
+    "blender": (2, 80, 0),
     "location": "File > Import-Export > Keyboard Layout Editor Raw (.json) ",
     "description": "Import Keyboard Layouts",
     "warning": "",
     "category": "Import-Export",
 }
-
-# main addon class
 
 
 class JSONImporter(bpy.types.Operator):
@@ -37,27 +34,29 @@ class JSONImporter(bpy.types.Operator):
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
-# add to import menu
-
 
 def menu_import(self, context):
+    """Add item to import menu"""
     self.layout.operator(JSONImporter.bl_idname, text="KLE Raw Data (.json)")
-
-# register addon
 
 
 def register():
-    bpy.utils.register_module(__name__)
-
-    bpy.types.INFO_MT_file_import.append(menu_import)
-
-# unregister addon
+    if hasattr(bpy.types, "TOPBAR_MT_file_import"):
+        bpy.utils.register_class(JSONImporter)
+        bpy.types.TOPBAR_MT_file_import.append(menu_import)
+    else:
+        bpy.utils.register_module(__name__)
+        bpy.types.INFO_MT_file_import.append(menu_import)
 
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    if hasattr(bpy.types, "TOPBAR_MT_file_import"):
+        bpy.utils.unregister_class(JSONImporter)
+        bpy.types.TOPBAR_MT_file_import.remove(menu_import)
+    else:
+        bpy.utils.unregister_module(__name__)
+        bpy.types.INFO_MT_file_import.remove(menu_import)
 
-    bpy.types.INFO_MT_file_import.remove(menu_import)
 
 if __name__ == "__main__":
     register()
