@@ -659,7 +659,7 @@ def read(filepath):
                                 m.link(mixShader, 'Shader',
                                     materialOutput, 'Surface')
 
-                            try:
+                            if HTMLParser().unescape(key["v"]["labels"][pos]).isascii():
                                 add_label.add(
                                     key["v"]["labels"][pos],
                                     fonts[pos],
@@ -672,7 +672,7 @@ def read(filepath):
                                     key["w"],
                                     key["h"],
                                     new_obj_tl)
-                            except AttributeError:
+                            else:
                                 add_label.add(
                                     key["v"]["labels"][pos],
                                     noto,
