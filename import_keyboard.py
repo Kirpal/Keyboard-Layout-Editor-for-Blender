@@ -10,6 +10,7 @@ open.
 
 # import needed modules
 import bpy
+from mathutils import Vector
 import json
 import urllib.request
 import os
@@ -736,21 +737,22 @@ def read(filepath):
     # get case height and width from generated keys
     helpers.set_active_object(context, keyboard_empty)
     bpy.ops.object.select_grouped(type="CHILDREN_RECURSIVE")
-    bpy.ops.object.duplicate()
-    helpers.set_active_object(context, bpy.context.selected_objects[0])
-    bpy.ops.object.join()
-    bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
-    if hasattr(context, "view_layer"):
-        width = context.view_layer.objects.active.dimensions[0] + 0.5
-        height = context.view_layer.objects.active.dimensions[1] + 0.5
-        caseX = context.view_layer.objects.active.location[0]
-        caseY = context.view_layer.objects.active.location[1]
-    else:
-        width = scn.objects.active.dimensions[0] + 0.5
-        height = scn.objects.active.dimensions[1] + 0.5
-        caseX = scn.objects.active.location[0]
-        caseY = scn.objects.active.location[1]
-    bpy.ops.object.delete(use_global=False)
+    min_x = 10000000.0
+    max_x = -1000000.0
+    min_y = 10000000.0
+    max_y = -1000000.0
+    for o in bpy.context.selected_objects:
+        bbox_corners = [o.matrix_world @ Vector(corner) for corner in o.bound_box]
+        for c in bbox_corners:
+            min_x = min(min_x, c[0])
+            max_x = max(max_x, c[0])
+            min_y = min(min_y, c[1])
+            max_y = max(max_y, c[1])
+
+    width = (max_x - min_x) + 0.5
+    height = (max_y - min_y) + 0.5
+    caseX = (max_x + min_x) / 2.0
+    caseY = (max_y + min_y) / 2.0
     
     # create the case
     caseTemplate = bpy.data.objects['case']
