@@ -48,6 +48,7 @@ def add(label, font, profile, labelPosition, labelMaterial, labelSize, keyX, key
     """Add label to a key"""
     context = bpy.context
     scn = context.scene
+    labelSize = int(labelSize)
     # add text
     new_label = bpy.data.curves.new(
         type="FONT", name="keylabel")
