@@ -169,30 +169,21 @@ def load(filePath):
                         if "rx" in prev:
                             rowData["rx"] = prev["rx"]
                         if "ry" in prev:
-                            if "yCoord" in rowData:
-                                rowData["ry"] = prev["ry"]
-                                rowData["y"] = prev["ry"] + rowData["yCoord"]
+                            rowData["ry"] = prev["ry"]
+                            if "y" in prev:
                                 y = prev["ry"] + rowData["yCoord"]
                             else:
-                                rowData["ry"] = prev["ry"]
-                                rowData["y"] = prev["ry"]
                                 y = prev["ry"]
-                        elif "r" in prev and "ry" in rowData:
-                            if "yCoord" in rowData:
-                                rowData["y"] = rowData["ry"] + rowData["yCoord"]
-                                y = rowData["ry"] + rowData["yCoord"]
-                            else:
-                                rowData["y"] = rowData["ry"]
+                        elif ("r" in prev and "yCoord" not in rowData) or "rx" in prev:
+                            if "ry" in rowData:
                                 y = rowData["ry"]
-                        elif "r" in prev:
-                            if "yCoord" in rowData:
-                                rowData["ry"] = 0
-                                rowData["y"] = rowData["yCoord"]
-                                y = rowData["yCoord"]
                             else:
                                 rowData["ry"] = 0
-                                rowData["y"] = 0
                                 y = 0
+                            if "y" in prev:
+                                y += prev["y"]
+
+                        rowData["y"] = y
 
                         # if rowData has property set then add it to key
                         if "a" in rowData:
