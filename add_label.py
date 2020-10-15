@@ -112,7 +112,7 @@ def add(label, font, profile, labelPosition, labelMaterial, labelSize, keyX, key
         new_label.modifiers["Remesh"].octree_depth = (
             4 if len(label_text) == 1 else 7)
         new_label.modifiers["Remesh"].use_remove_disconnected = False
-        bpy.ops.object.modifier_apply(
+        bpy.ops.object.gpencil_modifier_apply(
             apply_as='DATA', modifier="Remesh")
 
     helpers.unselect_all(scn)
@@ -131,7 +131,7 @@ def add(label, font, profile, labelPosition, labelMaterial, labelSize, keyX, key
         "Shrinkwrap"].use_negative_direction = True
     bpy.context.object.modifiers[
         "Shrinkwrap"].target = keyObject
-    bpy.ops.object.modifier_apply(
+    bpy.ops.object.gpencil_modifier_apply(
         apply_as='DATA', modifier="Shrinkwrap")
 
     # create clipping cube
@@ -150,7 +150,7 @@ def add(label, font, profile, labelPosition, labelMaterial, labelSize, keyX, key
     bpy.ops.object.modifier_add(type='BOOLEAN')
     bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
     bpy.context.object.modifiers["Boolean"].object = scn.objects["clipCube"]
-    bpy.ops.object.modifier_apply(
+    bpy.ops.object.gpencil_modifier_apply(
         apply_as='DATA', modifier="Boolean")
     bpy.data.objects.remove(cube)
 
