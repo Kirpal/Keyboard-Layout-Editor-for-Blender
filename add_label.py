@@ -87,7 +87,7 @@ def add(label, font, profile, labelPosition, labelMaterial, labelSize, keyX, key
 
     new_label.data.extrude = 0.01
 
-    new_label.location = [boxLeft, boxTop, 2]
+    new_label.location = [boxLeft, boxTop, 0.75]
     new_label.rotation_euler[2] = pi
 
     helpers.add_object(scn, new_label)
