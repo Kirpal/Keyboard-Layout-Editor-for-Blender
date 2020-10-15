@@ -840,6 +840,6 @@ def read(filepath):
     # remove all the template objects
     for object in defaultObjects:
         helpers.select_object(bpy.data.objects[object])
-    bpy.ops.object.delete()
+        bpy.ops.object.delete()
 
     bpy.context.window_manager.progress_end()
