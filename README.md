@@ -45,10 +45,13 @@ Allows you to import keyboard layouts into blender and render them in 3d
 4. All Done!
 
 ### How to add LEDs:
-+ Add the following line to the object at the beginning (the one with "backcolor" in it):
++ Add the following lines to the keyboard "Notes" section
 
-    `"led" : [RED, GREEN, BLUE, BRIGHTNESS]` *(you may need to add a comma to the line above)*
-    + RED, GREEN, and BLUE are out of 255, and BRIGHTNESS is from 0 to 1
+    ```
+    led_color: #RRGGBB
+    led_brightness: 1
+    ```
+    + Where `led_brightness` is any number from 0 to 1 and `led_color` is a hex color
 
 + To make the keycap legends backlit, make the legend color the same as whatever color you made the LEDs
 
