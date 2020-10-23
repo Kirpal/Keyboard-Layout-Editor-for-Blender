@@ -1,4 +1,4 @@
-from bpy import context, ops, data
+from bpy import context, ops, data, app
 from typing import List, Tuple
 
 
@@ -41,6 +41,14 @@ def add_object(object, collection=None):
         collection.objects.link(object)
     else:
         context.scene.objects.link(object)
+
+
+def apply_modifier(modifier_name: str):
+    """Apply the given modifier on the current object (2.8/2.9)"""
+    if app.version >= (2, 90, 0):
+        ops.object.modifier_apply(modifier=modifier_name)
+    else:
+        ops.object.modifier_apply(apply_as='DATA', modifier=modifier_name)
 
 
 def hex2rgb(hex: str):

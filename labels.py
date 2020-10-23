@@ -2,7 +2,7 @@ from bpy import context, ops, data
 import re
 import os
 from math import pi
-from .helpers import select_all, unselect_all, add_object, select_object, set_active_object, in_charset
+from .helpers import *
 from .key import Profile, Label, Key
 from .char_ranges import CJK_RANGES, DEJAVU_RANGES
 from typing import Tuple, List
@@ -77,7 +77,7 @@ def add_curve(key: Key, curve, text_length: int, label_material_name: str, label
         curve.modifiers["Remesh"].mode = 'SMOOTH'
         curve.modifiers["Remesh"].octree_depth = (4 if text_length == 1 else 7)
         curve.modifiers["Remesh"].use_remove_disconnected = False
-        ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
+        apply_modifier("Remesh")
 
     unselect_all()
     set_active_object(curve)
@@ -90,7 +90,7 @@ def add_curve(key: Key, curve, text_length: int, label_material_name: str, label
     context.object.modifiers["Shrinkwrap"].use_positive_direction = True
     context.object.modifiers["Shrinkwrap"].use_negative_direction = True
     context.object.modifiers["Shrinkwrap"].target = key_object
-    ops.object.modifier_apply(apply_as='DATA', modifier="Shrinkwrap")
+    apply_modifier("Shrinkwrap")
 
     # create clipping cube
     ops.mesh.primitive_cube_add(location=(box[0] - box[2] * 0.5, box[1] + box[3] * 0.5, key_object.location[2] + key_object.dimensions[2] / 2))
@@ -107,7 +107,7 @@ def add_curve(key: Key, curve, text_length: int, label_material_name: str, label
     ops.object.modifier_add(type='BOOLEAN')
     context.object.modifiers["Boolean"].operation = 'INTERSECT'
     context.object.modifiers["Boolean"].object = cube
-    ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
+    apply_modifier("Boolean")
     data.objects.remove(cube)
 
     for edge in context.object.data.edges:
@@ -194,7 +194,8 @@ def add(key: Key, fonts: List, label_position: int, material_name: str, key_obj)
     label_length = len(key_label.text)
 
     curve = None
-    if (match := re.fullmatch(r"<i class=['\"](fa|kb) (fa|kb)-([a-zA-Z0-9\-]+)['\"]><\/i>", key_label.text)) is not None:
+    match = re.fullmatch(r"<i class=['\"](fa|kb) (fa|kb)-([a-zA-Z0-9\-]+)['\"]><\/i>", key_label.text)
+    if match is not None:
         label_size *= 0.5
         curve = add_icon(match[1], match[3], label_size, label_position, box)
         label_length = 1

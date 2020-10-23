@@ -86,9 +86,12 @@ def load(filePath: str) -> Keyboard:
                 keyboard.name = row["name"]
             if "switchType" in row:
                 keyboard.switch_type = row["switchType"]
-            if "notes" in row and (color_match := re.search(r'led_color:\s*#([a-fA-F0-9]{3,6})', row["notes"])) is not None:
-                keyboard.led_color = '#' + color_match[1]
-                if (brightness_match := re.search(r'led_brightness:\s*(1|0\.?[0-9]*)', row["notes"])) is not None:
+            if "notes" in row:
+                color_match = re.search(r'led_color:\s*#([a-fA-F0-9]{3,6})', row["notes"])
+                brightness_match = re.search(r'led_brightness:\s*(1|0\.?[0-9]*)', row["notes"])
+                if color_match is not None:
+                    keyboard.led_color = '#' + color_match[1]
+                if brightness_match is not None:
                     keyboard.led_brightness = float(brightness_match[1])
             if "css" in row:
                 keyboard.css = row["css"]

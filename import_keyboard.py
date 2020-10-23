@@ -17,7 +17,7 @@ import re
 from math import pi
 from . import parse_json
 from . import labels
-from .helpers import hex2rgb, add_object, select_object, unselect_all, set_active_object
+from .helpers import *
 from .materials import make_key_material, make_led_material
 from .key import Label, Key, KeyBase, KeySegment, Profile
 
@@ -39,7 +39,7 @@ def append_object(obj_name: str):
     object = bpy.data.objects[obj_name]
     set_active_object(object)
     for mod in object.modifiers:
-        bpy.ops.object.modifier_apply(modifier=mod.name)
+        apply_modifier(mod.name)
 
     appended_objects.append(obj_name)
 
@@ -345,7 +345,7 @@ def read(filepath: str):
     set_active_object(case)
     # bevel the corners
     bpy.ops.object.modifier_add(type="BEVEL")
-    bpy.ops.object.modifier_apply(modifier="Bevel")
+    apply_modifier("Bevel")
 
     bpy.data.materials["Stem"].node_tree.nodes[
         "Diffuse BSDF"].inputs["Color"].default_value = keyboard.stem_color
