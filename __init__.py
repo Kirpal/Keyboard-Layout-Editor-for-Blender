@@ -5,7 +5,7 @@ from bpy.props import StringProperty
 bl_info = {
     "name": "Import: KLE Raw JSON format (.json)",
     "author": "Kirpal Demian",
-    "version": (3, 1),
+    "version": (3, 2),
     "blender": (2, 80, 0),
     "location": "File > Import > KLE Raw Data (.json) ",
     "description": "Import layouts from Keyboard Layout Editor",
@@ -25,7 +25,7 @@ class ImportKLEJson(bpy.types.Operator, ImportHelper):
     filter_glob = StringProperty(default="*.json", options={'HIDDEN'})
 
     def execute(self, context):
-        from . import import_keyboard
+        from .src import import_keyboard
 
         return import_keyboard.load_json(self, self.filepath)
 
