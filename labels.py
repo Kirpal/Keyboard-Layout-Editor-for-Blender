@@ -9,9 +9,9 @@ from typing import Tuple, List
 
 
 LABEL_ALIGNMENT = {
-    Profile.DCS: [0.25, 0.15, 0.25, 0.325],
-    Profile.DSA: [0.2, 0.25, 0.2, 0.25],
-    Profile.SA: [0.2, 0.23, 0.2, 0.20],
+    Profile.DCS: [0.25, 0.05, 0.25, 0.25],
+    Profile.DSA: [0.25, 0.15, 0.25, 0.2],
+    Profile.SA: [0.25, 0.2, 0.25, 0.2],
     Profile.DSS: None,
 }
 
@@ -31,15 +31,6 @@ DEJAVU = data.fonts.load(os.path.join(os.path.dirname(
     __file__), "fonts", "deja_vu.ttf"))
 NOTO = data.fonts.load(os.path.join(os.path.dirname(
     __file__), "fonts", "noto_cjk.ttc"))
-
-# Blender text vertical alignment accounts for line spacing,
-# which is apparently set to ~1/.6 when aligning at top one
-VERTICAL_CORRECTION = [
-    1.0, 1.0, 1.0,
-    0.8, 0.8, 0.8,
-    1.0, 1.0, 1.0,
-    1.0, 1.0, 1.0
-]
 
 ALIGN_TEXT = [
     ["LEFT", "TOP"],
@@ -170,7 +161,7 @@ def add_text(text: str, size: float, font, label_position: int, box: Tuple[float
     new_label.data.text_boxes[0].width = box[2]
     new_label.data.text_boxes[0].height = box[3] + vertical_correction * size
 
-    new_label.data.text_boxes[0].y = -size * VERTICAL_CORRECTION[label_position]
+    new_label.data.text_boxes[0].y = -size
     new_label.data.align_x = ALIGN_TEXT[label_position][0]
     new_label.data.align_y = ALIGN_TEXT[label_position][1]
 
@@ -206,11 +197,11 @@ def add(key: Key, fonts: List, label_position: int, material_name: str, key_obj)
         elif in_charset(max_char, CJK_RANGES):
             font = NOTO
             offset = 0.0001
-            label_size *= 2
+            label_size = key_label.size / 7.5
         elif in_charset(max_char, DEJAVU_RANGES):
             font = DEJAVU
             offset = 0.0001
-            label_size *= 1.3
+            label_size = key_label.size / 11.5
         else:
             font = SYMBOLA
 

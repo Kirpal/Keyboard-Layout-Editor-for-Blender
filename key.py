@@ -250,7 +250,11 @@ class Key(KeyBase):
         label_texts = self._parse_text(label.split('\n'), props["a"])
         label_colors = self._parse_colors(props["t"], props["a"])
         label_sizes = self._parse_font_sizes(
-            props["f"], props["f2"], props["fa"], props["a"])
+            props["f"],
+            props["f2"] if "f2" in props else props["f"],
+            props["fa"],
+            props["a"]
+        )
 
         assert(len(label_texts) == len(label_sizes) == len(label_colors) == 12)
 

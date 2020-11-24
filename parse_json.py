@@ -40,7 +40,6 @@ def load(filePath: str) -> Keyboard:
                         "c": "#cccccc",
                         "t": "#111111",
                         "f": 3,
-                        "f2": 3,
                         "fa": None,
                         "a": 4,
                         # override defaults with any current row data
