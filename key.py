@@ -21,6 +21,14 @@ def get_value(obj: dict, key: str, default=None):
     return obj[key] if key in obj else default
 
 
+def fix_color(color: str, fallback: str):
+    """Fix the given color string"""
+    if color is not None and re.fullmatch(r"#[a-fA-F0-9]{3,6}", color):
+        return color.upper()
+
+    return fallback.upper()
+
+
 class Profile(Enum):
     """A standard keycap profile"""
     DCS = "DCS"
@@ -78,7 +86,7 @@ class KeyBase:
     """Common elements of key classes"""
     def __init__(self, is_decal: bool, color: str, x: float, y: float, width: float, height: float, profile: Profile = None, profile_str: str = None, homing: bool = None):
         self.is_decal = is_decal
-        self.color = color.upper()
+        self.color = fix_color(color, "#cccccc")
         self.width = width
         self.height = height
         self.x = x
@@ -292,5 +300,5 @@ class Outcrop(KeyBase):
 class Label:
     def __init__(self, text: str, color: str, size: int):
         self.text = re.sub("<br ?/?>", "\n", HTMLParser().unescape(text))
-        self.color = color.upper()
+        self.color = fix_color(color, "#111111")
         self.size = size
