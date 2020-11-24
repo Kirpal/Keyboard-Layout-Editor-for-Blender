@@ -26,7 +26,7 @@ GOOGLE_FONTS = json.load(open(os.path.join(os.path.dirname(
     __file__), "fonts.json")))
 
 # blender file with template objects
-TEMPLATE_BLEND = os.path.join(os.path.dirname(__file__), "template.blend", "Object")
+TEMPLATE_BLEND = os.path.join(os.path.dirname(__file__), "keycap_parts.blend", "Object")
 
 # keeps track of all objects that have been appended
 appended_objects = []
