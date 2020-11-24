@@ -44,6 +44,8 @@ Allows you to import keyboard layouts into blender and render them in 3d
 3. Select the json file that you downloaded from [Keyboard Layout Editor](http://keyboard-layout-editor.com) and click `Import KLE Raw JSON`
 4. All Done!
 
+*Note: Do not use `keycap_parts.blend` as it will not work! Use [example  below](#blender-scene-file) if you want a starting point*
+
 ### How to add LEDs:
 + Add the following lines to the keyboard "Notes" section
 
