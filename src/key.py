@@ -1,5 +1,5 @@
 from enum import Enum
-from html.parser import HTMLParser
+from html import unescape
 import re
 
 # Map an align flag to the label index
@@ -210,7 +210,7 @@ class Key(KeyBase):
         elif len(label) == 0 and self.width >= 4.5:
             self.name = "Space"
         else:
-            self.name = HTMLParser().unescape(label.replace("\n", " "))
+            self.name = unescape(label.replace("\n", " "))
             self.name = re.sub(r"\s+", " ", self.name)
             self.name = re.sub(r"<i class='(fa|kb) (fa|kb)-([a-zA-Z0-9\-]+)'><\/i>", lambda m: m[3], self.name)
 
@@ -299,6 +299,6 @@ class Outcrop(KeyBase):
 
 class Label:
     def __init__(self, text: str, color: str, size: int):
-        self.text = re.sub("<br ?/?>", "\n", HTMLParser().unescape(text))
+        self.text = re.sub("<br ?/?>", "\n", unescape(text))
         self.color = fix_color(color, "#111111")
         self.size = size

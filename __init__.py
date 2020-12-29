@@ -5,8 +5,8 @@ from bpy.props import StringProperty
 bl_info = {
     "name": "Import: KLE Raw JSON format (.json)",
     "author": "Kirpal Demian",
-    "version": (3, 2),
-    "blender": (2, 80, 0),
+    "version": (3, 3),
+    "blender": (2, 91, 0),
     "location": "File > Import > KLE Raw Data (.json) ",
     "description": "Import layouts from Keyboard Layout Editor",
     "warning": "",
