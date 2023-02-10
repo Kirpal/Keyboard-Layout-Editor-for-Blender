@@ -48,7 +48,7 @@ ALIGN_TEXT = [
 def add_curve(key: Key, curve, text_length: int, label_material_name: str, label_size: int, key_object, box: Tuple[float], offset: float):
     """Helper to add curve as a key label"""
     curve.rotation_euler[2] = pi
-    curve.data.extrude = 0.01
+    curve.data.extrude = 0.20
     curve.location[2] = key_object.location[2] + key_object.dimensions[2]
 
     add_object(curve)
@@ -66,7 +66,7 @@ def add_curve(key: Key, curve, text_length: int, label_material_name: str, label
     if label_size > 6:
         ops.object.modifier_add(type='REMESH')
         curve.modifiers["Remesh"].mode = 'SMOOTH'
-        curve.modifiers["Remesh"].octree_depth = (4 if text_length == 1 else 7)
+        curve.modifiers["Remesh"].octree_depth = (5 if text_length == 1 else 7)
         curve.modifiers["Remesh"].use_remove_disconnected = False
         apply_modifier("Remesh")
 
